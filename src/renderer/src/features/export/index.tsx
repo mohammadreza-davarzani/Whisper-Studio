@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from '@/app/navigation'
-import { motion } from '@/lib/motion'
+import { FORMAT_ICONS } from '@/lib/format-icons'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { captions } from '@/captions'
@@ -9,24 +9,9 @@ import {
   Copy,
   Check,
   Download,
-  FileText,
-  Subtitles,
-  Code,
-  FileCode,
-  Globe,
-  LayoutTemplate,
   FolderOpen,
   Eye
 } from 'lucide-react'
-
-const FORMAT_ICONS = {
-  txt: FileText,
-  srt: Subtitles,
-  vtt: Globe,
-  json: Code,
-  md: FileCode,
-  html: LayoutTemplate
-}
 
 const FORMATS = captions.export.formats.map((format) => ({
   ...format,
@@ -117,11 +102,7 @@ export default function Export() {
 
         {FORMATS.map((f) => (
           <TabsContent key={f.value} value={f.value}>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="glass-panel rounded-xl overflow-hidden"
-            >
+              <div className="glass-panel rounded-xl overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 bg-secondary/20">
                 <Eye className="w-3.5 h-3.5 text-muted-foreground" />
                 <span className="text-[11px] font-medium text-muted-foreground">
@@ -135,7 +116,7 @@ export default function Export() {
               <pre className="p-5 text-[12px] font-mono leading-relaxed text-foreground/80 overflow-x-auto max-h-[400px] overflow-y-auto whitespace-pre-wrap">
                 {PREVIEWS[f.value]}
               </pre>
-            </motion.div>
+            </div>
           </TabsContent>
         ))}
       </Tabs>

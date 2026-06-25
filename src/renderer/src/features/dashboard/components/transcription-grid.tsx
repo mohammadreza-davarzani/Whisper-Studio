@@ -1,5 +1,4 @@
 import { Link } from '@/app/navigation'
-import { motion } from '@/lib/motion'
 import { Mic, Clock, Users, CheckCircle2, MoreHorizontal } from 'lucide-react'
 
 const RECENT = [
@@ -96,54 +95,48 @@ export default function TranscriptionGrid() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {RECENT.map((item, i) => (
-          <motion.div
+        {RECENT.map((item) => (
+          <Link
             key={item.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
+            to="/studio"
+            className="group relative block overflow-hidden rounded-2xl border border-border/40 bg-card hover:border-primary/30 hover:-translate-y-0.5 transition-all"
           >
-            <Link
-              to="/studio"
-              className="group relative block overflow-hidden rounded-2xl border border-border/40 bg-card hover:border-primary/30 hover:-translate-y-0.5 transition-all"
-            >
-              {/* Gradient header */}
-              <div className={`h-20 bg-gradient-to-br ${item.accent} relative overflow-hidden`}>
-                <div className="absolute inset-0 flex items-center justify-end pr-4">
-                  <Mic className="w-12 h-12 text-foreground/5 group-hover:text-primary/10 transition-colors" />
-                </div>
-                <div className="absolute top-3 left-4 flex items-center gap-1.5 px-2 py-1 rounded-md bg-background/60 backdrop-blur-sm">
-                  <CheckCircle2 className="w-3 h-3 text-success" />
-                  <span className="text-[10px] font-mono text-success">{item.confidence}%</span>
-                </div>
-                <button
-                  onClick={(e) => e.stopPropagation()}
-                  className="absolute top-3 right-3 p-1.5 rounded-md bg-background/60 backdrop-blur-sm text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <MoreHorizontal className="w-3.5 h-3.5" />
-                </button>
+            {/* Gradient header */}
+            <div className={`h-20 bg-gradient-to-br ${item.accent} relative overflow-hidden`}>
+              <div className="absolute inset-0 flex items-center justify-end pr-4">
+                <Mic className="w-12 h-12 text-foreground/5 group-hover:text-primary/10 transition-colors" />
               </div>
+              <div className="absolute top-3 left-4 flex items-center gap-1.5 px-2 py-1 rounded-md bg-background/60 backdrop-blur-sm">
+                <CheckCircle2 className="w-3 h-3 text-success" />
+                <span className="text-[10px] font-mono text-success">{item.confidence}%</span>
+              </div>
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="absolute top-3 right-3 p-1.5 rounded-md bg-background/60 backdrop-blur-sm text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <MoreHorizontal className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
-              {/* Body */}
-              <div className="p-4">
-                <h3 className="text-[13px] font-medium truncate group-hover:text-primary transition-colors mb-2">
-                  {item.name}
-                </h3>
-                <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {item.duration}
-                  </span>
-                  <span className="text-muted-foreground/30">·</span>
-                  <span className="flex items-center gap-1">
-                    <Users className="w-3 h-3" /> {item.speakers}
-                  </span>
-                  <span className="text-muted-foreground/30">·</span>
-                  <span>{item.format}</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground/60 mt-2">{item.date}</p>
+            {/* Body */}
+            <div className="p-4">
+              <h3 className="text-[13px] font-medium truncate group-hover:text-primary transition-colors mb-2">
+                {item.name}
+              </h3>
+              <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> {item.duration}
+                </span>
+                <span className="text-muted-foreground/30">·</span>
+                <span className="flex items-center gap-1">
+                  <Users className="w-3 h-3" /> {item.speakers}
+                </span>
+                <span className="text-muted-foreground/30">·</span>
+                <span>{item.format}</span>
               </div>
-            </Link>
-          </motion.div>
+              <p className="text-[11px] text-muted-foreground/60 mt-2">{item.date}</p>
+            </div>
+          </Link>
         ))}
       </div>
     </div>

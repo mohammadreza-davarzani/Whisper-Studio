@@ -1,25 +1,9 @@
 import type { Dispatch, SetStateAction } from 'react'
 
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  FileText,
-  Subtitles,
-  Code,
-  FileCode,
-  Globe,
-  LayoutTemplate,
-  FolderOpen
-} from 'lucide-react'
+import { FolderOpen } from 'lucide-react'
+import { FORMAT_ICONS } from '@/lib/format-icons'
 import { captions } from '@/captions'
-
-const FORMAT_ICONS = {
-  txt: FileText,
-  srt: Subtitles,
-  vtt: Globe,
-  json: Code,
-  md: FileCode,
-  html: LayoutTemplate
-}
 
 const FORMATS = captions.newTranscription.output.formats.map((format) => ({
   ...format,
@@ -27,9 +11,7 @@ const FORMATS = captions.newTranscription.output.formats.map((format) => ({
 }))
 
 interface StepOutputProps {
-  exportMode: string
   outputFormats: string[]
-  setExportMode: Dispatch<SetStateAction<string>>
   setOutputFormats: Dispatch<SetStateAction<string[]>>
 }
 

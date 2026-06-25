@@ -1,6 +1,5 @@
 import { Plus, Sparkles, ArrowUpRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { motion } from '@/lib/motion'
 import { Link } from '@/app/navigation'
 
 export default function WelcomeHeader() {
@@ -8,11 +7,7 @@ export default function WelcomeHeader() {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-3xl border border-border/40 bg-gradient-to-br from-primary/10 via-card to-card p-8"
-    >
+    <div className="relative overflow-hidden rounded-3xl border border-border/40 bg-gradient-to-br from-primary/10 via-card to-card p-8">
       {/* Decorative glow */}
       <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -left-20 w-64 h-64 rounded-full bg-chart-2/5 blur-3xl pointer-events-none" />
@@ -47,6 +42,6 @@ export default function WelcomeHeader() {
           </Link>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }

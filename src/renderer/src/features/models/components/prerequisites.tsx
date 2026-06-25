@@ -16,7 +16,6 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import type { DesktopApi, PrerequisiteCheckStatus } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
-import { motion } from '@/lib/motion'
 import { captions } from '@/captions'
 
 const prerequisitesCaptions = captions.models.prerequisites
@@ -185,11 +184,8 @@ export default function Prerequisites({ desktop }: PrerequisitesProps) {
             ? prerequisitesCaptions.actions.openInstaller
             : prerequisitesCaptions.actions.install
           return (
-            <motion.div
+            <div
               key={item.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
               className="rounded-xl border border-border/40 bg-card p-4"
             >
               <div className="flex items-start gap-3 mb-3">
@@ -258,7 +254,7 @@ export default function Prerequisites({ desktop }: PrerequisitesProps) {
                     : actionLabel}
                 </Button>
               )}
-            </motion.div>
+            </div>
           )
         })}
       </div>

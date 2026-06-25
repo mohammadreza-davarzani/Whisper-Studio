@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
 import { Link } from '@/app/navigation'
-import { motion } from '@/lib/motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { captions } from '@/captions'
@@ -134,11 +133,7 @@ export default function Studio() {
           </div>
 
           {showReplace && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="shrink-0 px-6 py-2.5 border-b border-border/50 flex items-center gap-2 bg-secondary/20"
-            >
+            <div className="shrink-0 px-6 py-2.5 border-b border-border/50 flex items-center gap-2 bg-secondary/20">
               <Input
                 value={replaceText}
                 onChange={(e) => setReplaceText(e.target.value)}
@@ -151,7 +146,7 @@ export default function Studio() {
               <Button variant="outline" size="sm" className="text-xs">
                 {captions.studio.actions.replaceAll}
               </Button>
-            </motion.div>
+            </div>
           )}
 
           {/* Body */}

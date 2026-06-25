@@ -5,26 +5,14 @@ import type {
   DownloadedWhisperModelsResult,
   WhisperModelDownloadProgress
 } from '@shared/ipc'
-import { motion } from '@/lib/motion'
+import { formatBytes } from '@/lib/utils'
 import { captions } from '@/captions'
-import DownloadedModels from './components/dowanload-models'
+import DownloadedModels from './components/download-models'
 import AvailableModels from './components/available-models'
 import Prerequisites from './components/prerequisites'
 
 interface ModelsProps {
   desktop: DesktopApi
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) {
-    return captions.models.header.emptyStorageValue
-  }
-
-  const units = ['B', 'KB', 'MB', 'GB', 'TB']
-  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
-  const value = bytes / 1024 ** exponent
-
-  return `${value >= 10 || exponent === 0 ? Math.round(value) : value.toFixed(1)} ${units[exponent]}`
 }
 
 export default function Models({ desktop }: ModelsProps) {
@@ -89,11 +77,7 @@ export default function Models({ desktop }: ModelsProps) {
   return (
     <div className="p-8 max-w-[1280px] mx-auto space-y-8">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
-      >
+      <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Boxes className="w-4 h-4 text-primary" />
@@ -112,7 +96,9 @@ export default function Models({ desktop }: ModelsProps) {
                 {modelsCaptions.header.storageLabel}
               </p>
               <p className="text-[12px] font-mono font-semibold">
-                {formatBytes(downloadedModels.totalSizeBytes)}
+                {downloadedModels.totalSizeBytes === 0
+                  ? captions.models.header.emptyStorageValue
+                  : formatBytes(downloadedModels.totalSizeBytes)}
               </p>
             </div>
           </div>
@@ -126,7 +112,7 @@ export default function Models({ desktop }: ModelsProps) {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       <Prerequisites desktop={desktop} />
       <DownloadedModels

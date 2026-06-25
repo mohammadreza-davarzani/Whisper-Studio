@@ -28,7 +28,8 @@ export default function TranscriptSegment({ seg, isActive, searchQuery, onActiva
 
   const renderText = (content) => {
     if (!searchQuery) return content
-    return content.split(new RegExp(`(${searchQuery})`, 'gi')).map((part, i) =>
+    const escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return content.split(new RegExp(`(${escaped})`, 'gi')).map((part, i) =>
       part.toLowerCase() === searchQuery.toLowerCase() ? (
         <mark key={i} className="bg-warning/30 text-foreground rounded px-0.5">
           {part}

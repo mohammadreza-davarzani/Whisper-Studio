@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Download, Loader2, Cpu, Globe, Zap, Star, Boxes } from 'lucide-react'
 import type { DownloadedWhisperModel, WhisperModelDownloadProgress } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
-import { motion } from '@/lib/motion'
+import { formatBytes } from '@/lib/utils'
 import { captions } from '@/captions'
 
 const availableCaptions = captions.models.available
@@ -45,18 +45,6 @@ function parseSize(size: string): number {
   }
 
   return value * multipliers[unit]
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes <= 0) {
-    return '0 B'
-  }
-
-  const units = ['B', 'KB', 'MB', 'GB', 'TB']
-  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
-  const value = bytes / 1024 ** exponent
-
-  return `${value >= 10 || exponent === 0 ? Math.round(value) : value.toFixed(1)} ${units[exponent]}`
 }
 
 export default function AvailableModels({
@@ -131,11 +119,8 @@ export default function AvailableModels({
                 ? Math.min(Math.round((downloadedBytes / expectedSizeBytes) * 100), 100)
                 : 0
             return (
-              <motion.div
+              <div
                 key={model.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04 }}
                 className={`relative flex flex-col rounded-2xl border bg-card p-5 transition-all ${
                   model.recommended
                     ? 'border-primary/30'
@@ -186,11 +171,9 @@ export default function AvailableModels({
                       </span>
                     </div>
                     <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
-                      <motion.div
+                      <div
                         className="h-full bg-gradient-to-r from-primary to-chart-2 rounded-full"
-                        animate={{
-                          width: `${Math.max(progressPercent, downloadedBytes ? 4 : 0)}%`
-                        }}
+                        style={{ width: `${Math.max(progressPercent, downloadedBytes ? 4 : 0)}%` }}
                       />
                     </div>
                   </div>
@@ -210,7 +193,7 @@ export default function AvailableModels({
                     {availableCaptions.actions.downloadFailed}: {errorByModelId[model.id]}
                   </p>
                 )}
-              </motion.div>
+              </div>
             )
           })
         )}

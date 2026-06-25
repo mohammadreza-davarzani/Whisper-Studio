@@ -1,6 +1,5 @@
 import { Fragment, useState } from 'react'
 import { useNavigate } from '@/app/navigation'
-import { motion, AnimatePresence } from '@/lib/motion'
 import { Button } from '@/components/ui/button'
 import { captions } from '@/captions'
 import StepFiles, { type TranscriptionFile } from './components/files-step'
@@ -20,10 +19,9 @@ export default function NewTranscription() {
   const [settings, setSettings] = useState<TranscriptionSettings>({
     ...captions.newTranscription.initialSettings
   })
-  const [outputFormats, setOutputFormats] = useState<string[]>([
+  const [outputFormats, setOutputFormats] = useState<string[]>(() => [
     ...captions.newTranscription.initialOutputFormats
   ])
-  const [exportMode, setExportMode] = useState(captions.newTranscription.initialExportMode)
 
   return (
     <div className="p-8 max-w-[900px] mx-auto">
@@ -81,27 +79,17 @@ export default function NewTranscription() {
       </div>
 
       {/* Step Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
-        >
+      <div key={step}>
           {step === 1 && <StepFiles files={files} setFiles={setFiles} />}
           {step === 2 && <StepSettings settings={settings} setSettings={setSettings} />}
           {step === 3 && (
             <StepOutput
               outputFormats={outputFormats}
               setOutputFormats={setOutputFormats}
-              exportMode={exportMode}
-              setExportMode={setExportMode}
             />
           )}
           {step === 4 && <Processing />}
-        </motion.div>
-      </AnimatePresence>
+        </div>
 
       {/* Navigation */}
       {step < 4 && (

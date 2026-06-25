@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import type { DownloadedWhisperModel } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
-import { motion } from '@/lib/motion'
+import { formatBytes } from '@/lib/utils'
 import { captions } from '@/captions'
 
 const downloadedCaptions = captions.models.downloaded
@@ -22,18 +22,6 @@ interface DownloadedModelsProps {
   onDelete: (id: string) => Promise<void>
   onRefresh: () => void
   totalSizeBytes: number
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) {
-    return '0 B'
-  }
-
-  const units = ['B', 'KB', 'MB', 'GB', 'TB']
-  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
-  const value = bytes / 1024 ** exponent
-
-  return `${value >= 10 || exponent === 0 ? Math.round(value) : value.toFixed(1)} ${units[exponent]}`
 }
 
 function formatDownloadedDate(downloadedAt: number): string {
@@ -125,11 +113,8 @@ export default function DownloadedModels({
           </div>
         ) : (
           models.map((model, i) => (
-            <motion.div
+            <div
               key={model.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }}
               className="group rounded-xl border border-border/40 bg-card p-4 transition-colors hover:border-primary/20"
             >
               <div className="flex items-center gap-4">
@@ -187,7 +172,7 @@ export default function DownloadedModels({
                   {errorByModelId[model.id]}
                 </p>
               )}
-            </motion.div>
+            </div>
           ))
         )}
       </div>

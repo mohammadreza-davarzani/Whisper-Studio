@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from '@/app/navigation'
-import { motion } from '@/lib/motion'
 import { Button } from '@/components/ui/button'
 import { captions } from '@/captions'
 import { Loader2, CheckCircle2, Circle, Pause, X, ChevronRight, FileAudio } from 'lucide-react'
@@ -67,10 +66,9 @@ export default function Processing() {
             </span>
           </div>
           <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-            <motion.div
+            <div
               className={`h-full rounded-full ${isComplete ? 'bg-success' : 'bg-primary'}`}
               style={{ width: `${Math.min(100, progress)}%` }}
-              transition={{ duration: 0.3 }}
             />
           </div>
           <p className="text-[11px] text-muted-foreground mt-2">

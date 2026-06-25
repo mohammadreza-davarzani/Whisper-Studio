@@ -1,6 +1,5 @@
 import { useState, useCallback, type Dispatch, type DragEvent, type SetStateAction } from 'react'
 import { Upload, FileAudio, FileVideo, X, AlertTriangle, Clock, HardDrive } from 'lucide-react'
-import { motion } from '@/lib/motion'
 import { captions } from '@/captions'
 
 export interface TranscriptionFile {
@@ -69,11 +68,8 @@ export default function StepFiles({ files, setFiles }: StepFilesProps): JSX.Elem
             {captions.newTranscription.files.selectedFiles}
           </h3>
           {files.map((file, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 * i }}
               className="glass-panel rounded-xl p-4 flex items-center gap-4"
             >
               <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center shrink-0">
@@ -108,7 +104,7 @@ export default function StepFiles({ files, setFiles }: StepFilesProps): JSX.Elem
               >
                 <X className="w-3.5 h-3.5" />
               </button>
-            </motion.div>
+            </div>
           ))}
 
           {/* Summary */}
