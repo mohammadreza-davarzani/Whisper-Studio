@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   type LucideIcon,
   LayoutDashboard,
@@ -6,7 +6,9 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  AudioLines
+  AudioLines,
+  Moon,
+  Sun
 } from 'lucide-react'
 
 import type { AppRouteId } from '@/app/routing'
@@ -28,6 +30,16 @@ const navSections = captions.sidebar.sections.map((section) => ({
   items: Array<{ icon: LucideIcon; label: string; routeId: AppRouteId }>
 }>
 
+type ThemeMode = 'dark' | 'light'
+
+function getInitialTheme(): ThemeMode {
+  if (typeof window === 'undefined') {
+    return 'dark'
+  }
+
+  return window.localStorage.getItem('theme') === 'light' ? 'light' : 'dark'
+}
+
 interface AppSidebarProps {
   activeRoute: AppRouteId
   onNavigate: (routeId: AppRouteId) => void
@@ -35,6 +47,14 @@ interface AppSidebarProps {
 
 export function AppSidebar({ activeRoute, onNavigate }: AppSidebarProps): JSX.Element {
   const [collapsed, setCollapsed] = useState(false)
+  const [theme, setTheme] = useState<ThemeMode>(getInitialTheme)
+  const isLightTheme = theme === 'light'
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    window.localStorage.setItem('theme', theme)
+  }, [theme])
 
   return (
     <aside
@@ -102,6 +122,31 @@ export function AppSidebar({ activeRoute, onNavigate }: AppSidebarProps): JSX.El
           </div>
         ))}
       </nav>
+
+      {/* Theme */}
+      <div className="px-3 pt-1 pb-1">
+        <button
+          onClick={() => setTheme(isLightTheme ? 'dark' : 'light')}
+          title={
+            isLightTheme
+              ? captions.sidebar.theme.switchToDark
+              : captions.sidebar.theme.switchToLight
+          }
+          aria-pressed={isLightTheme}
+          className={`flex w-full items-center gap-3 px-3 py-2 rounded-lg text-left text-[13px] font-medium text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition-colors ${
+            collapsed ? 'justify-center' : ''
+          }`}
+        >
+          {isLightTheme ? (
+            <Moon className="w-4 h-4 shrink-0" />
+          ) : (
+            <Sun className="w-4 h-4 shrink-0" />
+          )}
+          {!collapsed && (
+            <span>{isLightTheme ? captions.sidebar.theme.light : captions.sidebar.theme.dark}</span>
+          )}
+        </button>
+      </div>
 
       {/* Settings + collapse */}
       <div className="px-3 pb-3 pt-1 flex items-center gap-0.5">

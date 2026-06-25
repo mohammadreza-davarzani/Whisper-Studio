@@ -15,6 +15,12 @@ export const captions = {
     settings: 'Settings',
     expand: 'Expand',
     collapse: 'Collapse',
+    theme: {
+      dark: 'Dark theme',
+      light: 'Light theme',
+      switchToDark: 'Switch to dark theme',
+      switchToLight: 'Switch to light theme'
+    },
     sections: [
       {
         title: 'Workspace',

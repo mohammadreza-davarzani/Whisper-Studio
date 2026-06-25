@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -86,6 +86,45 @@
   --warning: #f4a825;
 }
 
+:root[data-theme='light'] {
+  color-scheme: light;
+  --background: #f6f7f9;
+  --foreground: #171a20;
+  --card: #ffffff;
+  --card-foreground: #171a20;
+  --popover: #ffffff;
+  --popover-foreground: #171a20;
+  --primary: #176fd4;
+  --primary-foreground: #ffffff;
+  --secondary: #e8edf4;
+  --secondary-foreground: #3f4b5b;
+  --muted: #eef2f6;
+  --muted-foreground: #667386;
+  --accent: #eef2f6;
+  --accent-foreground: #171a20;
+  --destructive: #c92d2d;
+  --destructive-foreground: #ffffff;
+  --border: #d9e0ea;
+  --input: #d9e0ea;
+  --ring: #176fd4;
+  --chart-1: #176fd4;
+  --chart-2: #0f8f83;
+  --chart-3: #c77a10;
+  --chart-4: #b83d89;
+  --chart-5: #287fa8;
+  --sidebar-background: #ffffff;
+  --sidebar-foreground: #485465;
+  --sidebar-primary: #176fd4;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef2f6;
+  --sidebar-accent-foreground: #171a20;
+  --sidebar-border: #d9e0ea;
+  --sidebar-ring: #176fd4;
+  --titlebar: #ffffff;
+  --success: #16895d;
+  --warning: #bc7a16;
+}
+
 @layer components {
   .glass-panel {
     @apply border border-border/60 bg-card/70 shadow-sm backdrop-blur;
@@ -129,7 +168,7 @@
       system-ui,
       -apple-system,
       BlinkMacSystemFont,
-      "Segoe UI",
+      'Segoe UI',
       sans-serif;
   }
 
@@ -164,7 +203,7 @@
   }
 
   button:not(:disabled),
-  [role="button"]:not(:disabled) {
+  [role='button']:not(:disabled) {
     cursor: pointer;
   }
 }
