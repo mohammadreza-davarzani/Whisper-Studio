@@ -104,7 +104,7 @@ export default function TranscriptionGrid() {
             transition={{ delay: i * 0.04 }}
           >
             <Link
-              to="/editor"
+              to="/studio"
               className="group relative block overflow-hidden rounded-2xl border border-border/40 bg-card hover:border-primary/30 hover:-translate-y-0.5 transition-all"
             >
               {/* Gradient header */}

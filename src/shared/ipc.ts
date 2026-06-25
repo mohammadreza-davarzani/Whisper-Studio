@@ -2,6 +2,7 @@ export const IPC_CHANNELS = {
   appInfo: 'app:info',
   platform: 'system:platform',
   systemStatus: 'system:status',
+  prerequisites: 'system:prerequisites',
   windowIsMaximized: 'window:is-maximized',
   windowStateChanged: 'window:state-changed',
   windowMinimize: 'window:minimize',
@@ -35,6 +36,22 @@ export interface SystemStatus {
   metrics: readonly SystemStatusMetric[]
   ready: boolean
   status: string
+}
+
+export type PrerequisiteCheckId =
+  | 'python'
+  | 'ffmpeg'
+  | 'cuda'
+  | 'faster-whisper'
+  | 'ctranslate2'
+  | 'torch'
+
+export type PrerequisiteCheckStatus = 'ok' | 'missing'
+
+export interface PrerequisiteCheck {
+  id: PrerequisiteCheckId
+  installed: string | null
+  status: PrerequisiteCheckStatus
 }
 
 export interface WhisperFileSelection {
@@ -78,6 +95,7 @@ export interface DesktopApi {
   getAppInfo: () => Promise<AppInfo>
   getPlatform: () => Promise<DesktopPlatform>
   getSystemStatus: () => Promise<SystemStatus>
+  getPrerequisites: () => Promise<PrerequisiteCheck[]>
   selectWhisperFile: () => Promise<WhisperFileSelection>
   transcribeWithWhisper: (filePath: string) => Promise<WhisperTranscriptionResult>
   onWhisperOutput: (callback: (chunk: WhisperOutputChunk) => void) => () => void

@@ -1,18 +1,20 @@
-export type AppRouteId = 'dashboard' | 'new' | 'studio' | 'settings' | 'export'
+export type AppRouteId = 'dashboard' | 'new' | 'studio' | 'settings' | 'export' | 'models'
 
-const routeIds: AppRouteId[] = ['dashboard', 'new', 'studio', 'settings', 'export']
+const routeIds: AppRouteId[] = ['dashboard', 'new', 'studio', 'settings', 'export', 'models']
 
 const routePaths: Record<AppRouteId, string> = {
   dashboard: '/',
   new: '/new',
   studio: '/studio',
   settings: '/settings',
-  export: '/export'
+  export: '/export',
+  models: '/models'
 }
 
 const pathRoutes = new Map<string, AppRouteId>(
   Object.entries(routePaths).map(([routeId, path]) => [path, routeId as AppRouteId])
 )
+pathRoutes.set('/model', 'models')
 
 export function getRouteFromPath(path: string): AppRouteId {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`

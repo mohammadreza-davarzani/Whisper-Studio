@@ -5,6 +5,7 @@ import NewTranscription from '@/features/new-transcription'
 import Studio from '@/features/studio'
 import Export from '@/features/export'
 import Dashboard from '@/features/dashboard'
+import Models from '@/features/models'
 
 interface AppRouteViewProps {
   activeRoute: AppRouteId
@@ -12,8 +13,6 @@ interface AppRouteViewProps {
 }
 
 export function AppRouteView({ activeRoute, desktop }: AppRouteViewProps): JSX.Element {
-  void desktop
-
   switch (activeRoute) {
     case 'new':
       return <NewTranscription />
@@ -23,6 +22,8 @@ export function AppRouteView({ activeRoute, desktop }: AppRouteViewProps): JSX.E
       return <Studio />
     case 'export':
       return <Export />
+    case 'models':
+      return <Models desktop={desktop} />
     case 'dashboard':
     default:
       return <Dashboard />

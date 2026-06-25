@@ -1,4 +1,10 @@
-import type { AppInfo, DesktopApi, DesktopPlatform, SystemStatus } from '@shared/ipc'
+import type {
+  AppInfo,
+  DesktopApi,
+  DesktopPlatform,
+  PrerequisiteCheck,
+  SystemStatus
+} from '@shared/ipc'
 
 function detectBrowserPlatform(): DesktopPlatform {
   const platform = navigator.platform.toLowerCase()
@@ -36,6 +42,14 @@ const browserDesktopApi: DesktopApi = {
       { label: 'Platform', value: detectBrowserPlatform() }
     ]
   }),
+  getPrerequisites: async (): Promise<PrerequisiteCheck[]> => [
+    { id: 'python', installed: null, status: 'missing' },
+    { id: 'ffmpeg', installed: null, status: 'missing' },
+    { id: 'cuda', installed: null, status: 'missing' },
+    { id: 'faster-whisper', installed: null, status: 'missing' },
+    { id: 'ctranslate2', installed: null, status: 'missing' },
+    { id: 'torch', installed: null, status: 'missing' }
+  ],
   selectWhisperFile: async () => ({ canceled: true }),
   transcribeWithWhisper: async (filePath) => ({
     command: `python.exe -u -m whisper "${filePath}" --language fa`,

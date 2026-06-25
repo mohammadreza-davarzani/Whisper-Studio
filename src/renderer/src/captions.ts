@@ -24,11 +24,15 @@ export const captions = {
     sections: [
       {
         title: 'Workspace',
-        items: [{ label: 'Your Workspace', routeId: 'dashboard' }]
+        items: [
+          { label: 'Your Workspace', routeId: 'dashboard' },
+          { label: 'New Transcription', routeId: 'new' }
+        ]
       },
+
       {
-        title: 'Transcription',
-        items: [{ label: 'New Transcription', routeId: 'new' }]
+        title: 'Models',
+        items: [{ label: 'Model Manager', routeId: 'models' }]
       }
     ]
   },
@@ -50,6 +54,193 @@ export const captions = {
   },
   settingsPage: {
     title: 'Settings'
+  },
+  models: {
+    header: {
+      eyebrow: 'Model Manager',
+      title: 'Whisper Models',
+      subtitle: 'Download and manage Faster-Whisper transcription models',
+      storageLabel: 'Storage',
+      storageValue: '4.5 GB',
+      activeLabel: 'Active',
+      activeValue: 'large-v3'
+    },
+    prerequisites: {
+      title: 'Prerequisites',
+      summary: {
+        of: 'of',
+        suffix: 'dependencies installed'
+      },
+      actions: {
+        checkAll: 'Check all'
+      },
+      status: {
+        ok: 'Installed',
+        missing: 'Not installed',
+        checking: 'Checking'
+      },
+      versionPrefix: 'v',
+      requiredPrefix: 'needs v',
+      items: [
+        {
+          id: 'python',
+          name: 'Python',
+          required: '3.8+',
+          desc: 'Runtime environment for faster-whisper'
+        },
+        {
+          id: 'ffmpeg',
+          name: 'FFmpeg',
+          required: 'any',
+          desc: 'Audio/video extraction and decoding'
+        },
+        {
+          id: 'cuda',
+          name: 'CUDA Toolkit',
+          required: '11.8+ / 12.x',
+          desc: 'GPU acceleration for transcription'
+        },
+        {
+          id: 'faster-whisper',
+          name: 'faster-whisper',
+          required: '1.0+',
+          desc: 'Core transcription library (pip)'
+        },
+        {
+          id: 'ctranslate2',
+          name: 'ctranslate2',
+          required: '4.0+',
+          desc: 'CTranslate2 inference engine'
+        },
+        {
+          id: 'torch',
+          name: 'PyTorch',
+          required: '2.0+',
+          desc: 'Optional - for diarization & VAD'
+        }
+      ]
+    },
+    downloaded: {
+      title: 'Downloaded Models',
+      summary: {
+        suffix: 'models',
+        separator: '·',
+        storageUsed: '4.5 GB used'
+      },
+      empty: {
+        title: 'No models downloaded yet',
+        subtitle: 'Browse available models below to get started'
+      },
+      detailSeparator: '·',
+      languageSuffix: 'langs',
+      actions: {
+        more: 'Model actions',
+        delete: 'Delete model'
+      },
+      items: [
+        {
+          id: 1,
+          name: 'large-v3',
+          size: '2.9 GB',
+          precision: 'float16',
+          languages: '99',
+          params: '1.55B',
+          downloaded: '2 days ago'
+        },
+        {
+          id: 2,
+          name: 'medium',
+          size: '1.5 GB',
+          precision: 'int8',
+          languages: '99',
+          params: '769M',
+          downloaded: '1 week ago'
+        },
+        {
+          id: 3,
+          name: 'base',
+          size: '145 MB',
+          precision: 'int8',
+          languages: '99',
+          params: '74M',
+          downloaded: '2 weeks ago'
+        }
+      ]
+    },
+    available: {
+      title: 'Available Models',
+      subtitle: 'Download Faster-Whisper CTranslate2 models',
+      recommended: 'Recommended',
+      languageCount: '99',
+      progressSuffix: '%',
+      actions: {
+        download: 'Download',
+        downloading: 'Downloading...',
+        downloaded: 'Downloaded'
+      },
+      items: [
+        {
+          id: 1,
+          name: 'tiny',
+          size: '39 MB',
+          params: '39M',
+          speed: 'Fastest',
+          accuracy: 'Low',
+          recommended: false,
+          desc: 'Minimal accuracy, real-time on CPU'
+        },
+        {
+          id: 2,
+          name: 'base',
+          size: '74 MB',
+          params: '74M',
+          speed: 'Very Fast',
+          accuracy: 'Low',
+          recommended: false,
+          desc: 'Good for quick drafts'
+        },
+        {
+          id: 3,
+          name: 'small',
+          size: '244 MB',
+          params: '244M',
+          speed: 'Fast',
+          accuracy: 'Medium',
+          recommended: false,
+          desc: 'Balanced speed and quality'
+        },
+        {
+          id: 4,
+          name: 'medium',
+          size: '769 MB',
+          params: '769M',
+          speed: 'Medium',
+          accuracy: 'High',
+          recommended: false,
+          desc: 'High accuracy for most use cases'
+        },
+        {
+          id: 5,
+          name: 'large-v3',
+          size: '1.55 GB',
+          params: '1.55B',
+          speed: 'Slow',
+          accuracy: 'Highest',
+          recommended: true,
+          desc: 'Best accuracy, multilingual'
+        },
+        {
+          id: 6,
+          name: 'large-v3-turbo',
+          size: '809 MB',
+          params: '809M',
+          speed: 'Fast',
+          accuracy: 'High',
+          recommended: true,
+          desc: 'Near large-v3 quality at 8x speed'
+        }
+      ]
+    }
   },
   studio: {
     transcript: [
@@ -239,7 +430,8 @@ export const captions = {
           speed: '~75x',
           accuracy: 'Lower',
           vram: '1 GB',
-          desc: 'Fastest, good for drafts'
+          desc: 'Fastest, good for drafts',
+          recommended: false
         },
         {
           value: 'base',
@@ -247,7 +439,8 @@ export const captions = {
           speed: '~50x',
           accuracy: 'Fair',
           vram: '1 GB',
-          desc: 'Quick transcriptions'
+          desc: 'Quick transcriptions',
+          recommended: false
         },
         {
           value: 'small',
@@ -255,7 +448,8 @@ export const captions = {
           speed: '~32x',
           accuracy: 'Good',
           vram: '2 GB',
-          desc: 'Balanced choice'
+          desc: 'Balanced choice',
+          recommended: false
         },
         {
           value: 'medium',
@@ -263,7 +457,8 @@ export const captions = {
           speed: '~16x',
           accuracy: 'High',
           vram: '5 GB',
-          desc: 'Professional quality'
+          desc: 'Professional quality',
+          recommended: false
         },
         {
           value: 'large-v3',

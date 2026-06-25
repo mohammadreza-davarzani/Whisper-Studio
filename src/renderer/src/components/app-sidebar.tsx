@@ -8,7 +8,8 @@ import {
   ChevronRight,
   AudioLines,
   Moon,
-  Sun
+  Sun,
+  Boxes
 } from 'lucide-react'
 
 import type { AppRouteId } from '@/app/routing'
@@ -19,7 +20,8 @@ const navIcons = {
   new: AudioLines,
   settings: Settings,
   studio: LayoutDashboard,
-  export: LayoutDashboard
+  export: LayoutDashboard,
+  models: Boxes
 } satisfies Record<AppRouteId, LucideIcon>
 
 const navSections = captions.sidebar.sections.map((section) => ({

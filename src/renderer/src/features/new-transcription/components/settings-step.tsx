@@ -1,4 +1,5 @@
 import { useState, type Dispatch, type ReactNode, type SetStateAction } from 'react'
+import { Banner } from '@/components/banner'
 import { Switch } from '@/components/ui/switch'
 import {
   Select,
@@ -8,18 +9,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import {
-  ChevronDown,
-  Info,
-  Cpu,
-  Zap,
-  Star,
-  Globe,
-  Brain,
-  Users,
-  Volume2,
-  Waves
-} from 'lucide-react'
+import { ChevronDown, Info, Cpu, Zap, Globe, Brain, Users, Volume2, Waves } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { captions } from '@/captions'
 
@@ -68,7 +58,7 @@ function SettingRow({
                   <TooltipTrigger>
                     <Info className="w-3 h-3 text-muted-foreground/50" />
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="max-w-[240px] text-xs">
+                  <TooltipContent side="right" className="text-xs">
                     {tooltip}
                   </TooltipContent>
                 </Tooltip>
@@ -97,18 +87,13 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
   return (
     <div className="space-y-6">
       {/* Recommended Banner */}
-      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/10">
-        <Star className="w-4 h-4 text-primary shrink-0 text-warning" />
-        <p className="text-[12px] text-muted-foreground">
-          <span className="text-foreground font-medium">
-            {captions.newTranscription.settings.recommendedBanner.emphasis}
-          </span>{' '}
-          {captions.newTranscription.settings.recommendedBanner.detail}
-        </p>
-      </div>
+      <Banner
+        emphasis={captions.newTranscription.settings.recommendedBanner.emphasis}
+        detail={captions.newTranscription.settings.recommendedBanner.detail}
+      />
 
       {/* Core Settings */}
-      <div className="glass-panel rounded-xl divide-y divide-border/50">
+      <div className="glass-panel relative z-30 rounded-xl divide-y divide-border/50">
         <div className="px-5">
           <SettingRow
             icon={Globe}
@@ -117,12 +102,12 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
             tooltip={settingRows.language.tooltip}
           >
             <Select value={settings.language} onValueChange={(v) => update('language', v)}>
-              <SelectTrigger className="w-[180px] h-9 text-[13px]">
+              <SelectTrigger className="w-[180px] h-9 text-[13px] bg-muted">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {LANGUAGES.map((lang) => (
-                  <SelectItem key={lang.value} value={lang.value} className="text-[13px]">
+                  <SelectItem key={lang.value} value={lang.value} className="text-[13px] mb-1">
                     {lang.label}
                   </SelectItem>
                 ))}
@@ -144,11 +129,11 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
               </SelectTrigger>
               <SelectContent>
                 {MODELS.map((m) => (
-                  <SelectItem key={m.value} value={m.value} className="text-[13px]">
+                  <SelectItem key={m.value} value={m.value} className="text-[13px] mb-1">
                     <div className="flex items-center gap-2">
                       {m.label}
                       {m.recommended && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-primary font-medium">
                           {captions.newTranscription.settings.recommendedBadge}
                         </span>
                       )}
@@ -227,7 +212,7 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
       </div>
 
       {/* Toggles */}
-      <div className="glass-panel rounded-xl divide-y divide-border/50">
+      <div className="glass-panel relative z-10 rounded-xl divide-y divide-border/50">
         <div className="px-5">
           <SettingRow
             icon={Zap}
@@ -265,7 +250,7 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
           {captions.newTranscription.settings.advancedSettings}
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-3">
-          <div className="glass-panel rounded-xl divide-y divide-border/50">
+          <div className="glass-panel relative z-0 rounded-xl divide-y divide-border/50">
             <div className="px-5">
               <SettingRow
                 icon={Globe}
