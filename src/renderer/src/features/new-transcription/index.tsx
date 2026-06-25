@@ -13,9 +13,7 @@ const STEPS = captions.newTranscription.steps
 export default function NewTranscription() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
-  const [files, setFiles] = useState<TranscriptionFile[]>(() =>
-    captions.newTranscription.initialFiles.map((file) => ({ ...file }))
-  )
+  const [file, setFile] = useState<TranscriptionFile | null>(null)
   const [settings, setSettings] = useState<TranscriptionSettings>({
     ...captions.newTranscription.initialSettings
   })
@@ -45,10 +43,13 @@ export default function NewTranscription() {
 
       {/* Step Indicator */}
       <div className="flex items-center gap-2 mb-8">
-        {STEPS.map((s, i) => (
+        {STEPS.map((s, i) => {
+          const isAccessible = s.id <= step || (s.id > 1 && !!file)
+          return (
           <Fragment key={s.id}>
             <button
-              onClick={() => setStep(s.id)}
+              onClick={() => isAccessible && setStep(s.id)}
+              disabled={!isAccessible}
               className={`flex items-center gap-2.5 px-4 py-2 rounded-lg transition-all text-left
                 ${
                   step === s.id
@@ -56,7 +57,7 @@ export default function NewTranscription() {
                     : step > s.id
                       ? 'bg-secondary/50 border border-transparent'
                       : 'border border-transparent opacity-50'
-                }`}
+                } disabled:cursor-not-allowed`}
             >
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold
@@ -75,12 +76,13 @@ export default function NewTranscription() {
             </button>
             {i < STEPS.length - 1 && <ChevronRight className="w-4 h-4 text-muted-foreground/30" />}
           </Fragment>
-        ))}
+          )
+        })}
       </div>
 
       {/* Step Content */}
       <div key={step}>
-        {step === 1 && <StepFiles files={files} setFiles={setFiles} />}
+        {step === 1 && <StepFiles file={file} setFile={setFile} />}
         {step === 2 && <StepSettings settings={settings} setSettings={setSettings} />}
         {step === 3 && (
           <StepOutput outputFormats={outputFormats} setOutputFormats={setOutputFormats} />
@@ -103,7 +105,11 @@ export default function NewTranscription() {
           </Button>
           <div className="flex items-center gap-3">
             {step < 3 && (
-              <Button onClick={() => setStep(step + 1)} className="gap-2">
+              <Button
+                onClick={() => setStep(step + 1)}
+                disabled={step === 1 && !file}
+                className="gap-2"
+              >
                 {captions.newTranscription.navigation.continue} <ArrowRight className="w-4 h-4" />
               </Button>
             )}

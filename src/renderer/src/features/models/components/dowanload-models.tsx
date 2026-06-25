@@ -7,7 +7,8 @@ import {
   Globe,
   RefreshCw,
   Trash2,
-  Loader2
+  Loader2,
+  Dot
 } from 'lucide-react'
 import type { DownloadedWhisperModel } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
@@ -112,7 +113,7 @@ export default function DownloadedModels({
             </p>
           </div>
         ) : (
-          models.map((model, i) => (
+          models.map((model) => (
             <div
               key={model.id}
               className="group rounded-xl border border-border/40 bg-card p-4 transition-colors hover:border-primary/20"
@@ -132,20 +133,14 @@ export default function DownloadedModels({
                     <span className="flex items-center gap-1">
                       <Cpu className="w-3 h-3" /> {model.params}
                     </span>
-                    <span className="text-muted-foreground/30">
-                      {downloadedCaptions.detailSeparator}
-                    </span>
+                    <Dot className="size-4 shrink-0 text-sidebar-foreground/40 -mx-1" />
                     <span className="flex items-center gap-1">
                       <Globe className="w-3 h-3" /> {model.languages}{' '}
                       {downloadedCaptions.languageSuffix}
                     </span>
-                    <span className="text-muted-foreground/30">
-                      {downloadedCaptions.detailSeparator}
-                    </span>
+                    <Dot className="size-4 shrink-0 text-sidebar-foreground/40 -mx-1" />
                     <span>{formatBytes(model.sizeBytes)}</span>
-                    <span className="text-muted-foreground/30">
-                      {downloadedCaptions.detailSeparator}
-                    </span>
+                    <Dot className="size-4 shrink-0 text-sidebar-foreground/40 -mx-1" />
                     <span>{formatDownloadedDate(model.downloadedAt)}</span>
                   </div>
                 </div>
