@@ -8,6 +8,8 @@ import type {
   WhisperProgressUpdate,
   WhisperTranscriptionRequest
 } from '../../../shared/ipc'
+import { TranscriptionError } from '../../../shared/errors'
+import { type Result, ok, err } from '../../../shared/types'
 import { getPythonEnv, normalizeLanguage, sanitizeFileName, getTimestamp } from './utils'
 
 export function getOutputDirectory(): string {
@@ -61,9 +63,11 @@ export async function runWhisper(
   request: WhisperTranscriptionRequest,
   onOutput: (chunk: WhisperOutputChunk) => void,
   onProgress: (update: WhisperProgressUpdate) => void
-): Promise<ExecutorResult> {
+): Promise<Result<ExecutorResult, TranscriptionError>> {
   if (typeof request.filePath !== 'string' || !request.filePath.trim()) {
-    throw new TypeError('A valid media file path is required for transcription.')
+    return err(
+      new TranscriptionError('A valid media file path is required for transcription.', null, '')
+    )
   }
 
   onProgress({ phase: 'checking-command', state: 'complete', message: 'Starting transcription.' })
@@ -79,7 +83,7 @@ export async function runWhisper(
 
   onProgress({ phase: 'sending-command', state: 'complete', message: command })
 
-  return new Promise((resolve, reject) => {
+  return new Promise<Result<ExecutorResult, TranscriptionError>>((resolve) => {
     const child = spawn('whisper', args, {
       cwd: dirname(request.filePath),
       env: getPythonEnv(),
@@ -109,9 +113,9 @@ export async function runWhisper(
       if (text) onOutput({ stream: 'stderr', text })
     })
 
-    child.on('error', (error) => {
-      onProgress({ phase: 'error', state: 'error', message: error.message })
-      reject(error)
+    child.on('error', (spawnError) => {
+      onProgress({ phase: 'error', state: 'error', message: spawnError.message })
+      resolve(err(new TranscriptionError(spawnError.message, null, spawnError.message)))
     })
 
     child.on('close', (exitCode) => {
@@ -119,6 +123,9 @@ export async function runWhisper(
       const remainingErr = stderrDecoder.end()
       if (remaining) onOutput({ stream: 'stdout', text: remaining })
       if (remainingErr) onOutput({ stream: 'stderr', text: remainingErr })
+
+      const stdout = Buffer.concat(stdoutChunks).toString('utf8')
+      const stderr = Buffer.concat(stderrChunks).toString('utf8')
 
       onProgress({
         phase: exitCode === 0 ? 'complete' : 'error',
@@ -129,14 +136,16 @@ export async function runWhisper(
             : `Whisper exited with code ${exitCode ?? 'unknown'}.`
       })
 
-      resolve({
-        args,
-        command,
-        exitCode,
-        outputDirectory,
-        stderr: Buffer.concat(stderrChunks).toString('utf8'),
-        stdout: Buffer.concat(stdoutChunks).toString('utf8')
-      })
+      resolve(
+        ok({
+          args,
+          command,
+          exitCode,
+          outputDirectory,
+          stderr,
+          stdout
+        })
+      )
     })
   })
 }

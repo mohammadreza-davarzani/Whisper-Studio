@@ -17,16 +17,26 @@ export function registerTranscriptionHandlers(): void {
       event: IpcMainInvokeEvent,
       request: WhisperTranscriptionRequest
     ): Promise<WhisperTranscriptionResult> => {
-      const { command, exitCode, outputDirectory, stdout, stderr } = await runWhisper(
+      const runResult = await runWhisper(
         request,
         (chunk) => event.sender.send(IPC_CHANNELS.whisperOutputChunk, chunk),
         (update) => event.sender.send(IPC_CHANNELS.whisperProgressUpdate, update)
       )
 
-      const { segments, jsonFile } = await parseWhisperJson(
-        outputDirectory,
-        basename(request.filePath)
-      )
+      if (!runResult.ok) {
+        return {
+          command: '',
+          exitCode: null,
+          stderr: runResult.error.message,
+          stdout: ''
+        }
+      }
+
+      const { command, exitCode, outputDirectory, stdout, stderr } = runResult.value
+
+      const parseResult = await parseWhisperJson(outputDirectory, basename(request.filePath))
+      const segments = parseResult.ok ? parseResult.value.segments : []
+      const jsonFile = parseResult.ok ? parseResult.value.jsonFile : null
 
       const record: TranscriptionRecord = {
         id: basename(outputDirectory),

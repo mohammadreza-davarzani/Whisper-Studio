@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { statSync } from 'node:fs'
 import { join } from 'node:path'
 import type { WhisperOutputFile, WhisperSegment } from '../../../shared/ipc'
+import { type Result, ok, err } from '../../../shared/types'
 
 export function getFileSize(path: string): number {
   try {
@@ -11,10 +12,12 @@ export function getFileSize(path: string): number {
   }
 }
 
+export type ParsedOutput = { segments: WhisperSegment[]; jsonFile: WhisperOutputFile | null }
+
 export async function parseWhisperJson(
   outputDir: string,
   sourceFileName: string
-): Promise<{ segments: WhisperSegment[]; jsonFile: WhisperOutputFile | null }> {
+): Promise<Result<ParsedOutput, Error>> {
   const baseName = sourceFileName.replace(/\.[^.]+$/, '')
   const jsonPath = join(outputDir, `${baseName}.json`)
 
@@ -34,8 +37,8 @@ export async function parseWhisperJson(
       path: jsonPath,
       sizeBytes: getFileSize(jsonPath)
     }
-    return { segments, jsonFile }
-  } catch {
-    return { segments: [], jsonFile: null }
+    return ok({ segments, jsonFile })
+  } catch (parseErr) {
+    return err(parseErr instanceof Error ? parseErr : new Error(String(parseErr)))
   }
 }

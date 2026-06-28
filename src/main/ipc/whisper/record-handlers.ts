@@ -19,13 +19,15 @@ export function registerRecordHandlers(): void {
         const rec = JSON.parse(raw) as TranscriptionRecord
         // Backfill segments for records created before segment embedding was added
         if (!rec.segments || rec.segments.length === 0) {
-          const { segments } = await parseWhisperJson(
+          const parseResult = await parseWhisperJson(
             join(exportsDir, entry.name),
             rec.sourceFileName
           )
-          rec.segments = segments
-          if (segments.length > 0) {
-            await writeFile(metaPath, JSON.stringify(rec, null, 2), 'utf8').catch(() => undefined)
+          if (parseResult.ok) {
+            rec.segments = parseResult.value.segments
+            if (parseResult.value.segments.length > 0) {
+              await writeFile(metaPath, JSON.stringify(rec, null, 2), 'utf8').catch(() => undefined)
+            }
           }
         }
         records.push(rec)
