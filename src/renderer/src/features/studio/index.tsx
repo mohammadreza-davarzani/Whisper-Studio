@@ -25,8 +25,11 @@ export default function Studio({ desktop }: StudioProps) {
   const [loading, setLoading] = useState(true)
   const [activeSegment, setActiveSegment] = useState<number>(1)
   const [activeSpeaker, setActiveSpeaker] = useState<string | null>(null)
+  const [followPlayback, setFollowPlayback] = useState(true)
   const { navigateTo } = useAppRoute()
   const seekToRef = useRef<((s: number) => void) | null>(null)
+  const transcriptScrollRef = useRef<HTMLDivElement>(null)
+  const isPlaybackDrivenSelectionRef = useRef(false)
 
   const { isDirty, isSaving, saveStatus, handleSave, markDirty } = useSegmentSave(
     record,
@@ -90,13 +93,50 @@ export default function Studio({ desktop }: StudioProps) {
     setLoading(false)
   }, [])
 
-  const handleTimeUpdate = useCallback((seconds: number) => {
-    setSegments((segs) => {
-      const active = segs.find((s) => seconds >= s.startSeconds && seconds < s.endSeconds)
-      if (active) setActiveSegment(active.id)
-      return segs
-    })
-  }, [])
+  const handleTimeUpdate = useCallback(
+    (seconds: number) => {
+      const active = segments.find((s) => seconds >= s.startSeconds && seconds < s.endSeconds)
+
+      if (!active) {
+        return
+      }
+
+      isPlaybackDrivenSelectionRef.current = true
+      setActiveSegment((previous) => (previous === active.id ? previous : active.id))
+    },
+    [segments]
+  )
+
+  useEffect(() => {
+    if (!followPlayback) {
+      return
+    }
+
+    if (!isPlaybackDrivenSelectionRef.current) {
+      return
+    }
+
+    const container = transcriptScrollRef.current
+
+    if (!container) {
+      return
+    }
+
+    const target = container.querySelector<HTMLElement>(`[data-segment-id="${activeSegment}"]`)
+
+    if (!target) {
+      return
+    }
+
+    const containerRect = container.getBoundingClientRect()
+    const targetRect = target.getBoundingClientRect()
+    const isAbove = targetRect.top < containerRect.top
+    const isBelow = targetRect.bottom > containerRect.bottom
+
+    if (isAbove || isBelow) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [activeSegment, followPlayback])
 
   function handleSegmentTextChange(id: number, newText: string): void {
     setSegments((segs) => segs.map((s) => (s.id === id ? { ...s, text: newText } : s)))
@@ -209,31 +249,43 @@ export default function Studio({ desktop }: StudioProps) {
         {/* Transcript */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Toolbar */}
-          <div className="shrink-0 px-6 py-2.5 border-b border-border/50 flex items-center gap-2">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={captions.studio.placeholders.search}
-                className="pl-9 h-8 text-[13px] bg-secondary/40 border-border/40"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
+          <div className="shrink-0 px-6 py-2.5 border-b border-border/50 flex items-center justify-between gap-2">
+            <div className="flex-1 flex gap-2 items-center min-w-0">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={captions.studio.placeholders.search}
+                  className="pl-9 h-8 text-[13px] bg-secondary/40 border-border/40"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+              <Button
+                variant={showReplace ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setShowReplace(!showReplace)}
+                className="text-xs text-muted-foreground gap-1"
+              >
+                <Replace className="w-3.5 h-3.5" /> {captions.studio.actions.replace}
+              </Button>
             </div>
             <Button
-              variant={showReplace ? 'secondary' : 'ghost'}
+              variant={followPlayback ? 'secondary' : 'ghost'}
               size="sm"
-              onClick={() => setShowReplace(!showReplace)}
-              className="text-xs text-muted-foreground gap-1"
+              onClick={() => setFollowPlayback((value) => !value)}
+              className="text-xs text-muted-foreground"
             >
-              <Replace className="w-3.5 h-3.5" /> {captions.studio.actions.replace}
+              {followPlayback
+                ? captions.studio.actions.followOn
+                : captions.studio.actions.followOff}
             </Button>
             {searchQuery && (
               <span className="text-[10px] font-mono text-muted-foreground shrink-0">
@@ -274,7 +326,7 @@ export default function Studio({ desktop }: StudioProps) {
           )}
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto px-4 py-4">
+          <div ref={transcriptScrollRef} className="flex-1 overflow-y-auto px-4 py-4">
             <div className="mx-auto space-y-1">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
@@ -295,17 +347,22 @@ export default function Studio({ desktop }: StudioProps) {
                 </div>
               ) : (
                 filteredSegments.map((seg) => (
-                  <TranscriptSegment
-                    key={seg.id}
-                    seg={seg}
-                    isActive={activeSegment === seg.id}
-                    searchQuery={searchQuery}
-                    onActivate={setActiveSegment}
-                    onTextChange={handleSegmentTextChange}
-                    onTimeClick={() => {
-                      seekToRef.current?.(seg.startSeconds)
-                    }}
-                  />
+                  <div key={seg.id} data-segment-id={seg.id}>
+                    <TranscriptSegment
+                      seg={seg}
+                      isActive={activeSegment === seg.id}
+                      searchQuery={searchQuery}
+                      onActivate={(id) => {
+                        isPlaybackDrivenSelectionRef.current = false
+                        setActiveSegment(id)
+                      }}
+                      onTextChange={handleSegmentTextChange}
+                      onTimeClick={() => {
+                        isPlaybackDrivenSelectionRef.current = true
+                        seekToRef.current?.(seg.startSeconds)
+                      }}
+                    />
+                  </div>
                 ))
               )}
             </div>

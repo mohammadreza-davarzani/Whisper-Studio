@@ -293,7 +293,9 @@ export const captions = {
       export: 'Export',
       replace: 'Replace',
       replaceAll: 'Replace All',
-      comments: 'Comments'
+      comments: 'Comments',
+      followOn: 'Follow: On',
+      followOff: 'Follow: Off'
     },
     placeholders: {
       search: 'Search transcript…',
