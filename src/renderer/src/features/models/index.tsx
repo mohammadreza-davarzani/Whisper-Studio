@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Boxes, HardDrive, Cpu } from 'lucide-react'
 import type {
-  DesktopApi,
+  AppApi,
+  ModelApi,
   DownloadedWhisperModelsResult,
   WhisperModelDownloadProgress
 } from '@shared/ipc'
@@ -12,7 +13,7 @@ import AvailableModels from './components/available-models'
 import Prerequisites from './components/prerequisites'
 
 interface ModelsProps {
-  desktop: DesktopApi
+  desktop: AppApi & ModelApi
 }
 
 export default function Models({ desktop }: ModelsProps) {

@@ -1,9 +1,9 @@
-import type { DesktopApi } from '@shared/ipc'
+import type { TranscriptionApi } from '@shared/ipc'
 import TranscriptionGrid from './components/transcription-grid'
 import WelcomeHeader from './components/welcome-header'
 
 interface DashboardProps {
-  desktop: DesktopApi
+  desktop: TranscriptionApi
 }
 
 export default function Dashboard({ desktop }: DashboardProps) {

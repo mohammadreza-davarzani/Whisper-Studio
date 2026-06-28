@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { captions } from '@/lib/strings'
 import { Search, Replace, Download, Check, FileAudio, Clock, Loader2, Save, X } from 'lucide-react'
-import AudioPlayer from '@/features/studio/componenets/audio-player'
-import SpeakerPanel from '@/features/studio/componenets/speaker-panel'
-import TranscriptSegment from '@/features/studio/componenets/transcript-segment'
-import type { DesktopApi, TranscriptionRecord } from '@shared/ipc'
+import AudioPlayer from '@/features/studio/components/audio-player'
+import SpeakerPanel from '@/features/studio/components/speaker-panel'
+import TranscriptSegment from '@/features/studio/components/transcript-segment'
+import type { FileSystemApi, TranscriptionRecord } from '@shared/ipc'
 import { takeStudioRecord, setStudioRecord } from '@/lib/studio-store'
 import { useAppRoute } from '@/app/use-app-route'
 import { type SrtSegment } from '@/lib/srt-parser'
@@ -16,7 +16,7 @@ import { useSegmentSearch } from './hooks/use-segment-search'
 import { useSegmentSave } from './hooks/use-segment-save'
 
 interface StudioProps {
-  desktop: DesktopApi
+  desktop: FileSystemApi
 }
 
 export default function Studio({ desktop }: StudioProps) {

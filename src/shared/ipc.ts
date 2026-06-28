@@ -183,19 +183,28 @@ export interface WhisperProgressUpdate {
   state: WhisperProgressState
 }
 
-export interface DesktopApi {
+/** Application metadata, system status, prerequisites, and file-path utilities. */
+export interface AppApi {
   getAppInfo: () => Promise<AppInfo>
   getPlatform: () => Promise<DesktopPlatform>
   getSystemStatus: () => Promise<SystemStatus>
   getPrerequisites: () => Promise<PrerequisiteCheck[]>
   installPrerequisite: (id: PrerequisiteCheckId) => Promise<PrerequisiteInstallResult>
+  getFilePath: (file: unknown) => string
+}
+
+/** Whisper model download, list, and deletion. */
+export interface ModelApi {
   getDownloadedModels: () => Promise<DownloadedWhisperModelsResult>
   downloadModel: (repoId: string) => Promise<WhisperModelActionResult>
   deleteModel: (id: string) => Promise<WhisperModelActionResult>
-  getFilePath: (file: unknown) => string
   onModelDownloadProgress: (
     callback: (progress: WhisperModelDownloadProgress) => void
   ) => () => void
+}
+
+/** Whisper transcription workflow and saved transcription records. */
+export interface TranscriptionApi {
   selectWhisperFile: () => Promise<WhisperFileSelection>
   transcribeWithWhisper: (
     request: WhisperTranscriptionRequest
@@ -204,9 +213,17 @@ export interface DesktopApi {
   onWhisperProgress: (callback: (update: WhisperProgressUpdate) => void) => () => void
   listTranscriptions: () => Promise<TranscriptionRecord[]>
   deleteTranscription: (id: string) => Promise<{ ok: boolean }>
+}
+
+/** File system read, write, and directory selection. */
+export interface FileSystemApi {
   readTextFile: (path: string) => Promise<string>
   writeTextFile: (path: string, content: string) => Promise<void>
   selectDirectory: () => Promise<string | null>
+}
+
+/** Native window controls. */
+export interface WindowControlsApi {
   windowControls: {
     isMaximized: () => Promise<boolean>
     minimize: () => Promise<void>
@@ -215,3 +232,6 @@ export interface DesktopApi {
     onStateChange: (callback: (isMaximized: boolean) => void) => () => void
   }
 }
+
+/** Full desktop API exposed by the preload bridge. Composed from all sub-interfaces. */
+export type DesktopApi = AppApi & ModelApi & TranscriptionApi & FileSystemApi & WindowControlsApi

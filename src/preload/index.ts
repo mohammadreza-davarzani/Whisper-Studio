@@ -1,14 +1,18 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import {
   IPC_CHANNELS,
+  type AppApi,
   type AppInfo,
   type DesktopApi,
   type DesktopPlatform,
   type DownloadedWhisperModelsResult,
+  type FileSystemApi,
+  type ModelApi,
   type PrerequisiteCheck,
   type PrerequisiteCheckId,
   type PrerequisiteInstallResult,
   type SystemStatus,
+  type TranscriptionApi,
   type TranscriptionRecord,
   type WhisperFileSelection,
   type WhisperModelActionResult,
@@ -16,10 +20,11 @@ import {
   type WhisperOutputChunk,
   type WhisperProgressUpdate,
   type WhisperTranscriptionRequest,
-  type WhisperTranscriptionResult
+  type WhisperTranscriptionResult,
+  type WindowControlsApi
 } from '../shared/ipc'
 
-const desktopApi: DesktopApi = {
+const appApi: AppApi = {
   getAppInfo: () => ipcRenderer.invoke(IPC_CHANNELS.appInfo) as Promise<AppInfo>,
   getPlatform: () => ipcRenderer.invoke(IPC_CHANNELS.platform) as Promise<DesktopPlatform>,
   getSystemStatus: () => ipcRenderer.invoke(IPC_CHANNELS.systemStatus) as Promise<SystemStatus>,
@@ -27,14 +32,17 @@ const desktopApi: DesktopApi = {
     ipcRenderer.invoke(IPC_CHANNELS.prerequisites) as Promise<PrerequisiteCheck[]>,
   installPrerequisite: (id: PrerequisiteCheckId) =>
     ipcRenderer.invoke(IPC_CHANNELS.prerequisiteInstall, id) as Promise<PrerequisiteInstallResult>,
+  getFilePath: (file: unknown) =>
+    webUtils.getPathForFile(file as Parameters<typeof webUtils.getPathForFile>[0])
+}
+
+const modelApi: ModelApi = {
   getDownloadedModels: () =>
     ipcRenderer.invoke(IPC_CHANNELS.downloadedModels) as Promise<DownloadedWhisperModelsResult>,
   downloadModel: (repoId: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.downloadModel, repoId) as Promise<WhisperModelActionResult>,
   deleteModel: (id: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.deleteModel, id) as Promise<WhisperModelActionResult>,
-  getFilePath: (file: unknown) =>
-    webUtils.getPathForFile(file as Parameters<typeof webUtils.getPathForFile>[0]),
   onModelDownloadProgress: (callback) => {
     const listener = (
       _event: Electron.IpcRendererEvent,
@@ -42,13 +50,12 @@ const desktopApi: DesktopApi = {
     ): void => {
       callback(progress)
     }
-
     ipcRenderer.on(IPC_CHANNELS.modelDownloadProgress, listener)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.modelDownloadProgress, listener)
+  }
+}
 
-    return () => {
-      ipcRenderer.removeListener(IPC_CHANNELS.modelDownloadProgress, listener)
-    }
-  },
+const transcriptionApi: TranscriptionApi = {
   selectWhisperFile: () =>
     ipcRenderer.invoke(IPC_CHANNELS.whisperSelectFile) as Promise<WhisperFileSelection>,
   transcribeWithWhisper: (request: WhisperTranscriptionRequest) =>
@@ -60,33 +67,31 @@ const desktopApi: DesktopApi = {
     const listener = (_event: Electron.IpcRendererEvent, chunk: WhisperOutputChunk): void => {
       callback(chunk)
     }
-
     ipcRenderer.on(IPC_CHANNELS.whisperOutputChunk, listener)
-
-    return () => {
-      ipcRenderer.removeListener(IPC_CHANNELS.whisperOutputChunk, listener)
-    }
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.whisperOutputChunk, listener)
   },
   onWhisperProgress: (callback) => {
     const listener = (_event: Electron.IpcRendererEvent, update: WhisperProgressUpdate): void => {
       callback(update)
     }
-
     ipcRenderer.on(IPC_CHANNELS.whisperProgressUpdate, listener)
-
-    return () => {
-      ipcRenderer.removeListener(IPC_CHANNELS.whisperProgressUpdate, listener)
-    }
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.whisperProgressUpdate, listener)
   },
   listTranscriptions: () =>
     ipcRenderer.invoke(IPC_CHANNELS.listTranscriptions) as Promise<TranscriptionRecord[]>,
   deleteTranscription: (id: string) =>
-    ipcRenderer.invoke(IPC_CHANNELS.deleteTranscription, id) as Promise<{ ok: boolean }>,
+    ipcRenderer.invoke(IPC_CHANNELS.deleteTranscription, id) as Promise<{ ok: boolean }>
+}
+
+const fileSystemApi: FileSystemApi = {
   readTextFile: (path: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.readTextFile, path) as Promise<string>,
   writeTextFile: (path: string, content: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.writeTextFile, path, content) as Promise<void>,
-  selectDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.selectDirectory) as Promise<string | null>,
+  selectDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.selectDirectory) as Promise<string | null>
+}
+
+const windowControlsApi: WindowControlsApi = {
   windowControls: {
     isMaximized: () => ipcRenderer.invoke(IPC_CHANNELS.windowIsMaximized) as Promise<boolean>,
     minimize: () => ipcRenderer.invoke(IPC_CHANNELS.windowMinimize) as Promise<void>,
@@ -96,14 +101,18 @@ const desktopApi: DesktopApi = {
       const listener = (_event: Electron.IpcRendererEvent, isMaximized: boolean): void => {
         callback(isMaximized)
       }
-
       ipcRenderer.on(IPC_CHANNELS.windowStateChanged, listener)
-
-      return () => {
-        ipcRenderer.removeListener(IPC_CHANNELS.windowStateChanged, listener)
-      }
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.windowStateChanged, listener)
     }
   }
+}
+
+const desktopApi: DesktopApi = {
+  ...appApi,
+  ...modelApi,
+  ...transcriptionApi,
+  ...fileSystemApi,
+  ...windowControlsApi
 }
 
 contextBridge.exposeInMainWorld('desktop', desktopApi)

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { DesktopApi, TranscriptionRecord } from '@shared/ipc'
+import type { FileSystemApi, TranscriptionRecord } from '@shared/ipc'
 import { takeStudioRecord } from '@/lib/studio-store'
 import {
   generate,
@@ -13,7 +13,7 @@ import { captions } from '@/lib/strings'
 import { FileAudio, Download, Check, Copy, ArrowLeft, Loader2, FolderOpen } from 'lucide-react'
 
 interface ExportProps {
-  desktop: DesktopApi
+  desktop: FileSystemApi
 }
 
 const FORMATS: ExportFormat[] = ['srt', 'vtt', 'txt', 'tsv']

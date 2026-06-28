@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react'
-import type { DesktopApi } from '@shared/ipc'
+import type { AppApi, ModelApi, TranscriptionApi } from '@shared/ipc'
 import { useNavigate } from '@/app/navigation'
 import { Button } from '@/components/ui/button'
 import { captions } from '@/lib/strings'
@@ -12,7 +12,7 @@ import { ArrowLeft, ArrowRight, ChevronRight, Sparkles } from 'lucide-react'
 const STEPS = captions.newTranscription.steps
 
 interface NewTranscriptionProps {
-  desktop: DesktopApi
+  desktop: AppApi & ModelApi & TranscriptionApi
 }
 
 export default function NewTranscription({ desktop }: NewTranscriptionProps) {

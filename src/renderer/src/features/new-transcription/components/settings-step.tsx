@@ -1,5 +1,5 @@
 import { useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react'
-import type { DesktopApi, DownloadedWhisperModel } from '@shared/ipc'
+import type { ModelApi, DownloadedWhisperModel } from '@shared/ipc'
 import { useNavigate } from '@/app/navigation'
 import { Banner } from '@/components/banner'
 import { Input } from '@/components/ui/input'
@@ -77,7 +77,7 @@ function SettingRow({
 }
 
 interface StepSettingsProps {
-  desktop: DesktopApi
+  desktop: ModelApi
   settings: TranscriptionSettings
   setSettings: Dispatch<SetStateAction<TranscriptionSettings>>
 }

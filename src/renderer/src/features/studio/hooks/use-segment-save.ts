@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import type { DesktopApi, TranscriptionRecord } from '@shared/ipc'
+import type { FileSystemApi, TranscriptionRecord } from '@shared/ipc'
 import type { SrtSegment } from '@/lib/srt-parser'
 
 type SaveStatus = 'idle' | 'saved' | 'error'
@@ -15,7 +15,7 @@ interface UseSegmentSaveResult {
 export function useSegmentSave(
   record: TranscriptionRecord | null,
   segments: SrtSegment[],
-  desktop: DesktopApi,
+  desktop: FileSystemApi,
   onSaved: (updated: TranscriptionRecord) => void
 ): UseSegmentSaveResult {
   const [isDirty, setIsDirty] = useState(false)

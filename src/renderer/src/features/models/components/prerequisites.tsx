@@ -13,7 +13,7 @@ import {
   ExternalLink
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import type { DesktopApi, PrerequisiteCheckStatus } from '@shared/ipc'
+import type { AppApi, PrerequisiteCheckStatus } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
 import { captions } from '@/lib/strings'
 
@@ -32,7 +32,7 @@ type PrerequisiteItem = {
 }
 
 interface PrerequisitesProps {
-  desktop: DesktopApi
+  desktop: AppApi
 }
 
 const prerequisiteIcons: Record<PrerequisiteId, LucideIcon> = {

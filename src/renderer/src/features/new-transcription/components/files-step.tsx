@@ -7,7 +7,7 @@ import {
   type SetStateAction
 } from 'react'
 import { Upload, FileAudio, FileVideo, X, Clock, HardDrive } from 'lucide-react'
-import type { DesktopApi } from '@shared/ipc'
+import type { AppApi } from '@shared/ipc'
 import { formatBytes } from '@/lib/utils'
 import { captions } from '@/lib/strings'
 
@@ -20,7 +20,7 @@ export interface TranscriptionFile {
 }
 
 interface StepFilesProps {
-  desktop: DesktopApi
+  desktop: AppApi
   file: TranscriptionFile | null
   setFile: Dispatch<SetStateAction<TranscriptionFile | null>>
 }
@@ -61,7 +61,7 @@ function loadMediaDuration(raw: File): Promise<string> {
   })
 }
 
-async function buildTranscriptionFile(raw: File, desktop: DesktopApi): Promise<TranscriptionFile> {
+async function buildTranscriptionFile(raw: File, desktop: AppApi): Promise<TranscriptionFile> {
   const duration = await loadMediaDuration(raw)
   const filePath = desktop.getFilePath(raw)
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { DesktopApi, TranscriptionRecord } from '@shared/ipc'
+import type { TranscriptionApi, TranscriptionRecord } from '@shared/ipc'
 import { Mic, Clock, FileAudio, Trash2, Loader2, FolderOpen } from 'lucide-react'
 import { setStudioRecord } from '@/lib/studio-store'
 import { captions } from '@/lib/strings'
@@ -36,7 +36,7 @@ function getAccent(id: string): string {
 }
 
 interface TranscriptionGridProps {
-  desktop: DesktopApi
+  desktop: TranscriptionApi
 }
 
 export default function TranscriptionGrid({ desktop }: TranscriptionGridProps) {

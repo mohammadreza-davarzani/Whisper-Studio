@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type {
-  DesktopApi,
+  TranscriptionApi,
   TranscriptionRecord,
   WhisperOutputFile,
   WhisperProgressPhase
@@ -48,7 +48,7 @@ function formatLogLine(source: string, text: string): string {
 }
 
 interface ProcessingProps {
-  desktop: DesktopApi
+  desktop: TranscriptionApi
   file: TranscriptionFile | null
   outputFormats: string[]
   settings: TranscriptionSettings
