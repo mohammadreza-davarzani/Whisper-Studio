@@ -613,7 +613,7 @@ export const captions = {
       { value: 'tsv', label: 'TSV' }
     ],
     fileInfo: {
-      title: 'Product Strategy Meeting Q4',
+      title: 'No file selected',
       details: '1h 23m · 3 speakers · 2,847 words · Large-v3',
       confidenceLabel: 'Confidence',
       confidenceValue: '96.4%',
@@ -648,114 +648,6 @@ export const captions = {
       title: 'Export Options',
       formatPrefix: 'Export as',
       formatSuffix: 'format'
-    },
-    previews: {
-      txt: `Product Strategy Meeting Q4
-
-[00:00:00] Sarah Chen: Good morning everyone. Thank you for joining today's product strategy meeting. We have a lot to cover, so let's get started right away.
-
-[00:00:15] Michael Torres: Thanks Sarah. I'd like to start by reviewing our Q3 metrics. Overall, we saw a 23% increase in user engagement, which exceeded our target of 18%.
-
-[00:00:32] Sarah Chen: That's excellent. Can you break down which features drove the most engagement? I'm particularly interested in the AI-powered suggestions we launched in August.
-
-[00:00:48] Michael Torres: Absolutely. The AI suggestions feature had the highest adoption rate at 67% of active users. The real-time collaboration tools came in second at 45%.`,
-      srt: `1
-00:00:00,000 --> 00:00:15,000
-Good morning everyone. Thank you for joining
-today's product strategy meeting. We have a lot
-to cover, so let's get started right away.
-
-2
-00:00:15,000 --> 00:00:32,000
-Thanks Sarah. I'd like to start by reviewing
-our Q3 metrics. Overall, we saw a 23% increase
-in user engagement, which exceeded our target of 18%.
-
-3
-00:00:32,000 --> 00:00:48,000
-That's excellent. Can you break down which
-features drove the most engagement? I'm particularly
-interested in the AI-powered suggestions.`,
-      vtt: `WEBVTT
-
-00:00:00.000 --> 00:00:15.000
-<v Sarah Chen>Good morning everyone. Thank you
-for joining today's product strategy meeting.
-
-00:00:15.000 --> 00:00:32.000
-<v Michael Torres>Thanks Sarah. I'd like to start
-by reviewing our Q3 metrics. Overall, we saw a
-23% increase in user engagement.
-
-00:00:32.000 --> 00:00:48.000
-<v Sarah Chen>That's excellent. Can you break down
-which features drove the most engagement?`,
-      json: `{
-  "metadata": {
-    "title": "Product Strategy Meeting Q4",
-    "duration": "1:23:45",
-    "speakers": 3,
-    "model": "large-v3",
-    "language": "en"
-  },
-  "segments": [
-    {
-      "id": 1,
-      "start": 0.0,
-      "end": 15.0,
-      "speaker": "Sarah Chen",
-      "text": "Good morning everyone...",
-      "confidence": 0.97,
-      "words": [
-        {"word": "Good", "start": 0.0, "end": 0.3},
-        {"word": "morning", "start": 0.3, "end": 0.7}
-      ]
-    }
-  ]
-}`,
-      tsv: `start\tend\tspeaker\ttext
-00:00:00.000\t00:00:15.000\tSarah Chen\tGood morning everyone. Thank you for joining today's product strategy meeting.
-00:00:15.000\t00:00:32.000\tMichael Torres\tThanks Sarah. I'd like to start by reviewing our Q3 metrics.
-00:00:32.000\t00:00:48.000\tSarah Chen\tThat's excellent. Can you break down which features drove the most engagement?`,
-      md: `# Product Strategy Meeting Q4
-
-**Date:** December 12, 2024  
-**Duration:** 1h 23m  
-**Speakers:** Sarah Chen, Michael Torres, Lisa Wang
-
----
-
-## Transcript
-
-**Sarah Chen** *(00:00:00)*  
-Good morning everyone. Thank you for joining today's product strategy meeting. We have a lot to cover, so let's get started right away.
-
-**Michael Torres** *(00:00:15)*  
-Thanks Sarah. I'd like to start by reviewing our Q3 metrics. Overall, we saw a 23% increase in user engagement, which exceeded our target of 18%.
-
-**Sarah Chen** *(00:00:32)*  
-That's excellent. Can you break down which features drove the most engagement?`,
-      html: `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Product Strategy Meeting Q4</title>
-  <style>
-    body { font-family: system-ui; max-width: 800px; margin: 0 auto; padding: 2rem; }
-    .speaker { font-weight: 600; color: #6C63FF; }
-    .timestamp { color: #888; font-size: 0.85em; font-family: monospace; }
-    .segment { margin-bottom: 1.5rem; line-height: 1.6; }
-  </style>
-</head>
-<body>
-  <h1>Product Strategy Meeting Q4</h1>
-  <div class="segment">
-    <span class="speaker">Sarah Chen</span>
-    <span class="timestamp">00:00:00</span>
-    <p>Good morning everyone...</p>
-  </div>
-</body>
-</html>`
     }
   },
   audioPlayer: {

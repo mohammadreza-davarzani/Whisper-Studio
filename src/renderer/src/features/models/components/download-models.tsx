@@ -13,6 +13,7 @@ import type { DownloadedWhisperModel } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
 import { formatBytes } from '@/lib/utils'
 import { captions } from '@/lib/strings'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 const downloadedCaptions = captions.models.downloaded
 
@@ -150,21 +151,26 @@ export default function DownloadedModels({
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => void handleDelete(model.id)}
-                    disabled={deletingModelIds.has(model.id)}
-                    title={downloadedCaptions.actions.delete}
-                    aria-label={downloadedCaptions.actions.delete}
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                  >
-                    {deletingModelIds.has(model.id) ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-3.5 h-3.5" />
-                    )}
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => void handleDelete(model.id)}
+                        disabled={deletingModelIds.has(model.id)}
+                        title={downloadedCaptions.actions.delete}
+                        aria-label={downloadedCaptions.actions.delete}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      >
+                        {deletingModelIds.has(model.id) ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{downloadedCaptions.actions.delete}</TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
               {errorByModelId[model.id] && (
