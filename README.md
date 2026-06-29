@@ -35,54 +35,6 @@ npm install
 npm run dev
 ```
 
-## Scripts
-
-```bash
-npm run dev          # Start Electron with Vite hot reload
-npm run typecheck    # Check all TypeScript projects
-npm run build        # Build main, preload, and renderer
-npm run preview      # Preview the packaged build locally
-npm run pack         # Create an unpacked app for the current platform
-npm run dist         # Build installers for the current platform
-npm run dist:mac     # Build macOS artifacts
-npm run dist:win     # Build Windows artifacts
-npm run dist:linux   # Build Linux artifacts
-npm run lint         # Run ESLint
-npm run format       # Format the repository
-```
-
-## UI Components
-
-shadcn/ui is configured for the renderer. Components live in:
-
-```text
-src/renderer/src/components/ui
-```
-
-Add more components with:
-
-```bash
-npx shadcn@latest add card
-```
-
-The `@/*` alias points to `src/renderer/src/*`, so imports look like:
-
-```ts
-import { Button } from '@/components/ui/button'
-```
-
-## Project Layout
-
-```text
-src/
-  main/       Electron main process: app lifecycle, windows, menus, IPC handlers
-  preload/    Context-isolated bridge exposed to the renderer
-  renderer/   React workbench UI
-  shared/     Types and constants shared across processes
-docs/         Architecture and contributor notes
-resources/    Icons and packaging resources
-```
-
 ## Release Targets
 
 Electron Builder is configured for:
