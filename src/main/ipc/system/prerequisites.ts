@@ -46,7 +46,10 @@ const installerUrls: Partial<Record<PrerequisiteCheckId, string>> = {
 }
 
 // Platform-specific fallback download pages used when no package manager is available.
-const fallbackInstallerUrls: Record<'darwin' | 'linux' | 'win32', Partial<Record<PrerequisiteCheckId, string>>> = {
+const fallbackInstallerUrls: Record<
+  'darwin' | 'linux' | 'win32',
+  Partial<Record<PrerequisiteCheckId, string>>
+> = {
   win32: {
     python: 'https://www.python.org/downloads/windows/',
     ffmpeg: 'https://www.gyan.dev/ffmpeg/builds/'
@@ -81,8 +84,12 @@ const systemInstallers: Record<
         probe: 'winget',
         command: 'winget',
         args: [
-          'install', '-e', '--id', 'Python.Python.3.12',
-          '--accept-source-agreements', '--accept-package-agreements'
+          'install',
+          '-e',
+          '--id',
+          'Python.Python.3.12',
+          '--accept-source-agreements',
+          '--accept-package-agreements'
         ],
         label: 'winget'
       }
@@ -92,8 +99,12 @@ const systemInstallers: Record<
         probe: 'winget',
         command: 'winget',
         args: [
-          'install', '-e', '--id', 'Gyan.FFmpeg',
-          '--accept-source-agreements', '--accept-package-agreements'
+          'install',
+          '-e',
+          '--id',
+          'Gyan.FFmpeg',
+          '--accept-source-agreements',
+          '--accept-package-agreements'
         ],
         label: 'winget'
       }
@@ -131,7 +142,11 @@ const systemInstallers: Record<
 }
 
 function getInstallPlatform(): 'darwin' | 'linux' | 'win32' | null {
-  if (process.platform === 'win32' || process.platform === 'darwin' || process.platform === 'linux') {
+  if (
+    process.platform === 'win32' ||
+    process.platform === 'darwin' ||
+    process.platform === 'linux'
+  ) {
     return process.platform
   }
 
@@ -395,7 +410,13 @@ function cudaResultFromToolkit(toolkit: CudaToolkitInfo | null): PrerequisiteChe
   }
 }
 
-async function checkCudaWithTorch(python: CommandResult | null): Promise<PrerequisiteCheck> {
+const TORCH_PROBE_TIMEOUT_MS = 30_000
+const TORCH_PROBE_TIMEOUT_AFTER_INSTALL_MS = 90_000
+
+async function checkCudaWithTorch(
+  python: CommandResult | null,
+  torchProbeTimeoutMs = TORCH_PROBE_TIMEOUT_MS
+): Promise<PrerequisiteCheck> {
   const toolkit = await detectCudaToolkit()
 
   if (!python) {
@@ -414,7 +435,11 @@ async function checkCudaWithTorch(python: CommandResult | null): Promise<Prerequ
     'print(json.dumps(result))'
   ].join('\n')
 
-  const output = await runCommand(python.command, [...python.prefixArgs, '-c', code], 5000)
+  const output = await runCommand(
+    python.command,
+    [...python.prefixArgs, '-c', code],
+    torchProbeTimeoutMs
+  )
   const jsonLine =
     output
       ?.split(/\r?\n/)
@@ -486,7 +511,12 @@ async function installViaPip(
   const python = await findPython()
 
   if (!python) {
-    return { action: 'installed', id, ok: false, stderr: 'Python was not found. Install Python first.' }
+    return {
+      action: 'installed',
+      id,
+      ok: false,
+      stderr: 'Python was not found. Install Python first.'
+    }
   }
 
   const args = [...python.prefixArgs, '-m', 'pip', 'install', pipPackage]
@@ -585,9 +615,15 @@ async function installCuda(): Promise<PrerequisiteInstallResult> {
 
   const args = [
     ...python.prefixArgs,
-    '-m', 'pip', 'install', '--upgrade',
-    'torch', 'torchvision', 'torchaudio',
-    '--index-url', CUDA_TORCH_INDEX_URL
+    '-m',
+    'pip',
+    'install',
+    '--upgrade',
+    'torch',
+    'torchvision',
+    'torchaudio',
+    '--index-url',
+    CUDA_TORCH_INDEX_URL
   ]
   const result = await runDetailedCommand(python.command, args)
 
@@ -602,7 +638,7 @@ async function installCuda(): Promise<PrerequisiteInstallResult> {
     }
   }
 
-  const cudaCheck = await checkCudaWithTorch(python)
+  const cudaCheck = await checkCudaWithTorch(python, TORCH_PROBE_TIMEOUT_AFTER_INSTALL_MS)
   clearPrerequisiteCache()
 
   return {
@@ -610,9 +646,10 @@ async function installCuda(): Promise<PrerequisiteInstallResult> {
     command: `${python.command} ${args.join(' ')}`,
     id,
     ok: cudaCheck.status === 'ok',
-    stderr: cudaCheck.status === 'ok'
-      ? result.stderr
-      : 'CUDA packages were installed, but GPU is still unavailable. Install/update NVIDIA drivers and ensure a CUDA-capable NVIDIA GPU is present.',
+    stderr:
+      cudaCheck.status === 'ok'
+        ? result.stderr
+        : 'CUDA packages were installed, but GPU is still unavailable. Install/update NVIDIA drivers and ensure a CUDA-capable NVIDIA GPU is present.',
     stdout: result.stdout
   }
 }
@@ -623,7 +660,8 @@ const INSTALLERS: Record<PrerequisiteCheckId, Installer> = {
   python: () => installSystemPrerequisite('python'),
   ffmpeg: () => installSystemPrerequisite('ffmpeg'),
   cuda: () => installCuda(),
-  'openai-whisper': () => installViaPip('openai-whisper', pipInstallPackages['openai-whisper'] as string),
+  'openai-whisper': () =>
+    installViaPip('openai-whisper', pipInstallPackages['openai-whisper'] as string),
   torch: () => installViaPip('torch', pipInstallPackages.torch as string)
 }
 

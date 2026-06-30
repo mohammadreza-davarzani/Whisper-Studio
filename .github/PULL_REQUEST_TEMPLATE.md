@@ -17,7 +17,3 @@
 - [ ] `npm run build` produces a clean build
 - [ ] Platform-specific behaviour (Windows / macOS / Linux) is noted where relevant
 - [ ] New public APIs or IPC channels are documented in `src/shared/ipc.ts`
-
-## Related issues
-
-Closes #
