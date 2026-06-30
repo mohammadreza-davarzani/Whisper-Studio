@@ -50,7 +50,7 @@ export interface SystemStatus {
 
 export type PrerequisiteCheckId = 'python' | 'ffmpeg' | 'cuda' | 'openai-whisper' | 'torch'
 
-export type PrerequisiteCheckStatus = 'ok' | 'missing'
+export type PrerequisiteCheckStatus = 'ok' | 'missing' | 'unsupported'
 
 export interface PrerequisiteCheck {
   id: PrerequisiteCheckId

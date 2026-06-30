@@ -10,7 +10,7 @@ import {
   Video,
   Package,
   Download,
-  ExternalLink
+  Ban
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { AppApi, PrerequisiteCheckStatus } from '@shared/ipc'
@@ -33,6 +33,7 @@ type PrerequisiteItem = {
 
 interface PrerequisitesProps {
   desktop: AppApi
+  onReadyChange?: (ready: boolean) => void
 }
 
 const prerequisiteIcons: Record<PrerequisiteId, LucideIcon> = {
@@ -42,7 +43,8 @@ const prerequisiteIcons: Record<PrerequisiteId, LucideIcon> = {
   'openai-whisper': Package,
   torch: Terminal
 }
-const externalInstallerIds = new Set<PrerequisiteId>(['python', 'ffmpeg'])
+// Prerequisites that require a working Python installation before they can be installed.
+const pythonDependentIds = new Set<PrerequisiteId>(['openai-whisper', 'torch', 'cuda'])
 
 const statusConfig = {
   ok: {
@@ -68,6 +70,12 @@ const statusConfig = {
     color: 'text-primary',
     bg: 'bg-primary/10',
     label: prerequisitesCaptions.status.installing
+  },
+  unsupported: {
+    icon: Ban,
+    color: 'text-muted-foreground',
+    bg: 'bg-muted/30',
+    label: prerequisitesCaptions.status.unsupported
   }
 } satisfies Record<
   PrerequisiteUiStatus,
@@ -81,7 +89,7 @@ const initialItems = prerequisitesCaptions.items.map((item) => ({
   status: 'checking'
 })) satisfies PrerequisiteItem[]
 
-export default function Prerequisites({ desktop }: PrerequisitesProps) {
+export default function Prerequisites({ desktop, onReadyChange }: PrerequisitesProps) {
   const [items, setItems] = useState<PrerequisiteItem[]>(() =>
     initialItems.map((item) => ({ ...item }))
   )
@@ -146,6 +154,12 @@ export default function Prerequisites({ desktop }: PrerequisitesProps) {
   const installedCount = items.filter((p) => p.status === 'ok').length
   const isInstalling = items.some((item) => item.status === 'installing')
   const isBusy = isChecking || isInstalling
+  const pythonOk = items.find((item) => item.id === 'python')?.status === 'ok'
+  const whisperOk = items.find((item) => item.id === 'openai-whisper')?.status === 'ok'
+
+  useEffect(() => {
+    onReadyChange?.(pythonOk && whisperOk)
+  }, [onReadyChange, pythonOk, whisperOk])
 
   return (
     <div>
@@ -174,11 +188,7 @@ export default function Prerequisites({ desktop }: PrerequisitesProps) {
           const cfg = statusConfig[item.status]
           const StatusIcon = cfg.icon
           const ItemIcon = prerequisiteIcons[item.id]
-          const isExternalInstaller = externalInstallerIds.has(item.id)
-          const ActionIcon = isExternalInstaller ? ExternalLink : Download
-          const actionLabel = isExternalInstaller
-            ? prerequisitesCaptions.actions.openInstaller
-            : prerequisitesCaptions.actions.install
+          const dependencyMissing = pythonDependentIds.has(item.id) && !pythonOk
           return (
             <div key={item.id} className="rounded-xl border border-border/40 bg-card p-4">
               <div className="flex items-start gap-3 mb-3">
@@ -229,22 +239,34 @@ export default function Prerequisites({ desktop }: PrerequisitesProps) {
                 <p className="mt-2 text-[11px] leading-snug text-destructive">{item.error}</p>
               )}
 
+              {item.status === 'unsupported' && (
+                <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+                  {prerequisitesCaptions.unsupportedHint}
+                </p>
+              )}
+
+              {dependencyMissing && item.status !== 'unsupported' && (
+                <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+                  {prerequisitesCaptions.dependencyHint}
+                </p>
+              )}
+
               {(item.status === 'missing' || item.status === 'installing') && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => void handleInstall(item.id)}
-                  disabled={isBusy}
+                  disabled={isBusy || dependencyMissing}
                   className="mt-3 h-7 w-full gap-1.5 text-xs"
                 >
                   {item.status === 'installing' ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
                   ) : (
-                    <ActionIcon className="w-3 h-3" />
+                    <Download className="w-3 h-3" />
                   )}
                   {item.status === 'installing'
                     ? prerequisitesCaptions.actions.installing
-                    : actionLabel}
+                    : prerequisitesCaptions.actions.install}
                 </Button>
               )}
             </div>

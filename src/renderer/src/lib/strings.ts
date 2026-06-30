@@ -121,11 +121,14 @@ export const captions = {
         ok: 'Installed',
         missing: 'Not installed',
         checking: 'Checking',
-        installing: 'Installing'
+        installing: 'Installing',
+        unsupported: 'Not supported'
       },
       versionPrefix: 'v',
       requiredPrefix: 'needs v',
       installFailed: 'Install failed',
+      dependencyHint: 'Install Python first',
+      unsupportedHint: 'Not available on this platform',
       items: [
         {
           id: 'python',
@@ -196,6 +199,7 @@ export const captions = {
         downloaded: 'Downloaded',
         downloadFailed: 'Download failed'
       },
+      blockedHint: 'Install Python and openai-whisper before downloading models',
       items: [
         {
           id: 1,
