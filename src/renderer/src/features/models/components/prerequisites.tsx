@@ -28,6 +28,7 @@ type PrerequisiteItem = {
   required: string
   installed: string | null
   status: PrerequisiteUiStatus
+  detail: string | null
   desc: string
 }
 
@@ -76,6 +77,12 @@ const statusConfig = {
     color: 'text-muted-foreground',
     bg: 'bg-muted/30',
     label: prerequisitesCaptions.status.unsupported
+  },
+  attention: {
+    icon: AlertCircle,
+    color: 'text-warning',
+    bg: 'bg-warning/10',
+    label: prerequisitesCaptions.status.attention
   }
 } satisfies Record<
   PrerequisiteUiStatus,
@@ -86,6 +93,7 @@ const initialItems = prerequisitesCaptions.items.map((item) => ({
   ...item,
   error: null,
   installed: null,
+  detail: null,
   status: 'checking'
 })) satisfies PrerequisiteItem[]
 
@@ -110,6 +118,7 @@ export default function Prerequisites({ desktop, onReadyChange }: PrerequisitesP
             ...item,
             error: null,
             installed: check?.installed ?? null,
+            detail: check?.detail ?? null,
             status: check?.status ?? 'missing'
           }
         })
@@ -251,7 +260,13 @@ export default function Prerequisites({ desktop, onReadyChange }: PrerequisitesP
                 </p>
               )}
 
-              {(item.status === 'missing' || item.status === 'installing') && (
+              {item.detail && item.status === 'attention' && (
+                <p className="mt-2 text-[11px] leading-snug text-warning">{item.detail}</p>
+              )}
+
+              {(item.status === 'missing' ||
+                item.status === 'attention' ||
+                item.status === 'installing') && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -266,7 +281,9 @@ export default function Prerequisites({ desktop, onReadyChange }: PrerequisitesP
                   )}
                   {item.status === 'installing'
                     ? prerequisitesCaptions.actions.installing
-                    : prerequisitesCaptions.actions.install}
+                    : item.status === 'attention'
+                      ? prerequisitesCaptions.actions.fix
+                      : prerequisitesCaptions.actions.install}
                 </Button>
               )}
             </div>

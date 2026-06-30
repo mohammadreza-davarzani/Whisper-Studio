@@ -351,9 +351,55 @@ async function checkPythonPackages(python: CommandResult | null): Promise<Prereq
   )
 }
 
-async function checkCudaWithTorch(python: CommandResult | null): Promise<PrerequisiteCheck> {
-  if (!python) {
+type CudaToolkitInfo = {
+  source: 'nvidia-smi' | 'nvcc'
+  version: string | null
+}
+
+// Detects an installed NVIDIA driver / CUDA toolkit independently of PyTorch.
+// `nvidia-smi` reports the driver's max supported CUDA version; `nvcc` reports
+// the installed CUDA Toolkit compiler version.
+async function detectCudaToolkit(): Promise<CudaToolkitInfo | null> {
+  if (process.platform === 'darwin') {
+    return null
+  }
+
+  const smi = await runCommand('nvidia-smi', [], 4000)
+
+  if (smi) {
+    return { source: 'nvidia-smi', version: smi.match(/CUDA Version:\s*([\d.]+)/i)?.[1] ?? null }
+  }
+
+  const nvcc = await runCommand('nvcc', ['--version'], 4000)
+
+  if (nvcc) {
+    return { source: 'nvcc', version: nvcc.match(/release\s*([\d.]+)/i)?.[1] ?? null }
+  }
+
+  return null
+}
+
+// Builds a CUDA check result when PyTorch cannot use the GPU. If a toolkit/driver
+// is present, surface an actionable hint instead of a flat "missing".
+function cudaResultFromToolkit(toolkit: CudaToolkitInfo | null): PrerequisiteCheck {
+  if (!toolkit) {
     return { id: 'cuda', installed: null, status: 'missing' }
+  }
+
+  return {
+    id: 'cuda',
+    installed: toolkit.version ?? 'detected',
+    status: 'attention',
+    detail:
+      'CUDA detected, but PyTorch is CPU-only. Reinstall the CUDA build of PyTorch to enable GPU acceleration.'
+  }
+}
+
+async function checkCudaWithTorch(python: CommandResult | null): Promise<PrerequisiteCheck> {
+  const toolkit = await detectCudaToolkit()
+
+  if (!python) {
+    return cudaResultFromToolkit(toolkit)
   }
 
   const code = [
@@ -376,23 +422,23 @@ async function checkCudaWithTorch(python: CommandResult | null): Promise<Prerequ
       .find((line) => line.startsWith('{') && line.endsWith('}')) ?? null
 
   if (!jsonLine) {
-    return { id: 'cuda', installed: null, status: 'missing' }
+    return cudaResultFromToolkit(toolkit)
   }
 
   try {
     const parsed = JSON.parse(jsonLine) as { available?: boolean; cuda?: string | null }
 
     if (!parsed.available) {
-      return { id: 'cuda', installed: null, status: 'missing' }
+      return cudaResultFromToolkit(toolkit)
     }
 
     return {
       id: 'cuda',
-      installed: parsed.cuda ?? 'detected',
+      installed: parsed.cuda ?? toolkit?.version ?? 'detected',
       status: 'ok'
     }
   } catch {
-    return { id: 'cuda', installed: null, status: 'missing' }
+    return cudaResultFromToolkit(toolkit)
   }
 }
 

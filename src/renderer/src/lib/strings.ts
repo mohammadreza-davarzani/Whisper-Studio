@@ -115,14 +115,16 @@ export const captions = {
         checkAll: 'Check all',
         install: 'Install',
         installing: 'Installing',
-        openInstaller: 'Open installer'
+        openInstaller: 'Open installer',
+        fix: 'Fix'
       },
       status: {
         ok: 'Installed',
         missing: 'Not installed',
         checking: 'Checking',
         installing: 'Installing',
-        unsupported: 'Not supported'
+        unsupported: 'Not supported',
+        attention: 'Action needed'
       },
       versionPrefix: 'v',
       requiredPrefix: 'needs v',
