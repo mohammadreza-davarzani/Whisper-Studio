@@ -72,6 +72,12 @@
       "package.json"
     ],
     "asar": true,
+    "publish": [
+      {
+        "provider": "github",
+        "releaseType": "release"
+      }
+    ],
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
