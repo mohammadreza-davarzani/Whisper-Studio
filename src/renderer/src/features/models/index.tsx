@@ -74,7 +74,7 @@ export default function Models({ desktop }: ModelsProps) {
     })
   }, [desktop])
 
-  const activeModel = downloadedModels.models[0]?.name ?? modelsCaptions.header.emptyActiveValue
+  const downloadedCount = downloadedModels.models.length
 
   return (
     <div className="p-8 max-w-[1280px] mx-auto space-y-8">
@@ -83,7 +83,7 @@ export default function Models({ desktop }: ModelsProps) {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Boxes className="w-4 h-4 text-primary" />
-            <span className="text-[11px] font-medium text-primary uppercase tracking-wider">
+            <span className="text-xs font-medium text-primary uppercase tracking-wider">
               {modelsCaptions.header.eyebrow}
             </span>
           </div>
@@ -92,25 +92,27 @@ export default function Models({ desktop }: ModelsProps) {
         </div>
         <div className="hidden sm:flex items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border/40 bg-card">
+            <Cpu className="w-3.5 h-3.5 text-primary" />
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                {modelsCaptions.header.modelsLabel}
+              </p>
+              <p className="text-xs font-mono font-semibold">
+                {downloadedCount} {modelsCaptions.header.modelCountSuffix}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border/40 bg-card">
             <HardDrive className="w-3.5 h-3.5 text-success" />
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
                 {modelsCaptions.header.storageLabel}
               </p>
-              <p className="text-[12px] font-mono font-semibold">
+              <p className="text-xs font-mono font-semibold">
                 {downloadedModels.totalSizeBytes === 0
                   ? captions.models.header.emptyStorageValue
                   : formatBytes(downloadedModels.totalSizeBytes)}
               </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border/40 bg-card">
-            <Cpu className="w-3.5 h-3.5 text-primary" />
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                {modelsCaptions.header.activeLabel}
-              </p>
-              <p className="text-[12px] font-mono font-semibold">{activeModel}</p>
             </div>
           </div>
         </div>

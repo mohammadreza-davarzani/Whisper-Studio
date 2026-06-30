@@ -10,7 +10,9 @@ import {
   Video,
   Package,
   Download,
-  Ban
+  Ban,
+  ChevronDown,
+  Wrench
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { AppApi, PrerequisiteCheckStatus } from '@shared/ipc'
@@ -102,6 +104,7 @@ export default function Prerequisites({ desktop, onReadyChange }: PrerequisitesP
     initialItems.map((item) => ({ ...item }))
   )
   const [isChecking, setIsChecking] = useState(true)
+  const [expanded, setExpanded] = useState(false)
 
   const refreshPrerequisites = useCallback(async (): Promise<void> => {
     setIsChecking(true)
@@ -165,131 +168,210 @@ export default function Prerequisites({ desktop, onReadyChange }: PrerequisitesP
   const isBusy = isChecking || isInstalling
   const pythonOk = items.find((item) => item.id === 'python')?.status === 'ok'
   const whisperOk = items.find((item) => item.id === 'openai-whisper')?.status === 'ok'
+  // An item needs attention when it is missing or flagged, but not when it is
+  // simply unsupported on this platform (e.g. CUDA on macOS).
+  const fixableItems = items.filter(
+    (item) => item.status === 'missing' || item.status === 'attention'
+  )
+  const hasProblems = fixableItems.length > 0
+  // Show the detailed grid when the user opted in, while busy, or when something
+  // needs attention so problems are never hidden behind a collapsed bar.
+  const showDetails = expanded || hasProblems || isBusy
+
+  // Install everything that needs attention. Python is installed first so that
+  // Python-dependent packages can succeed in the same pass.
+  const handleFixAll = useCallback(async (): Promise<void> => {
+    const order: PrerequisiteId[] = ['python', 'ffmpeg', 'torch', 'openai-whisper', 'cuda']
+
+    for (const id of order) {
+      const item = items.find((candidate) => candidate.id === id)
+
+      if (item && (item.status === 'missing' || item.status === 'attention')) {
+        await handleInstall(id)
+      }
+    }
+  }, [items, handleInstall])
 
   useEffect(() => {
     onReadyChange?.(pythonOk && whisperOk)
   }, [onReadyChange, pythonOk, whisperOk])
 
+  const StatusBarIcon = isChecking ? Loader2 : hasProblems ? AlertCircle : CheckCircle2
+  const statusBarColor = isChecking ? 'text-primary' : hasProblems ? 'text-warning' : 'text-success'
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">{prerequisitesCaptions.title}</h2>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            {installedCount} {prerequisitesCaptions.summary.of} {items.length}{' '}
-            {prerequisitesCaptions.summary.suffix}
-          </p>
+    <div className="rounded-xl border border-border/40 bg-card">
+      {/* Smart status bar */}
+      <div className="flex items-center justify-between gap-3 p-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+              hasProblems ? 'bg-warning/10' : 'bg-success/10'
+            }`}
+          >
+            <StatusBarIcon
+              className={`w-4 h-4 ${statusBarColor} ${isChecking ? 'animate-spin' : ''}`}
+            />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-foreground truncate">
+              {hasProblems ? prerequisitesCaptions.title : prerequisitesCaptions.ready.title}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+              {hasProblems
+                ? `${installedCount} ${prerequisitesCaptions.summary.of} ${items.length} ${prerequisitesCaptions.summary.suffix}`
+                : prerequisitesCaptions.ready.subtitle}
+            </p>
+          </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => void refreshPrerequisites()}
-          disabled={isBusy}
-          className="gap-1.5 text-xs text-muted-foreground"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin' : ''}`} />{' '}
-          {prerequisitesCaptions.actions.checkAll}
-        </Button>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {hasProblems && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => void handleFixAll()}
+              disabled={isBusy}
+              className="gap-1.5 text-xs"
+            >
+              <Wrench className="w-3.5 h-3.5" />
+              {prerequisitesCaptions.actions.fixAll}
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void refreshPrerequisites()}
+            disabled={isBusy}
+            className="gap-1.5 text-xs text-muted-foreground"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{prerequisitesCaptions.actions.checkAll}</span>
+          </Button>
+          {!hasProblems && !isBusy && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setExpanded((value) => !value)}
+              aria-label={
+                expanded
+                  ? prerequisitesCaptions.actions.collapse
+                  : prerequisitesCaptions.actions.expand
+              }
+              className="h-8 w-8 text-muted-foreground"
+            >
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
+              />
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {items.map((item) => {
-          const cfg = statusConfig[item.status]
-          const StatusIcon = cfg.icon
-          const ItemIcon = prerequisiteIcons[item.id]
-          const dependencyMissing = pythonDependentIds.has(item.id) && !pythonOk
-          return (
-            <div key={item.id} className="rounded-xl border border-border/40 bg-card p-4">
-              <div className="flex items-start gap-3 mb-3">
+      {showDetails && (
+        <div className="border-t border-border/40 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {items.map((item) => {
+              const cfg = statusConfig[item.status]
+              const StatusIcon = cfg.icon
+              const ItemIcon = prerequisiteIcons[item.id]
+              const dependencyMissing = pythonDependentIds.has(item.id) && !pythonOk
+              return (
                 <div
-                  className={`w-9 h-9 rounded-lg ${cfg.bg} flex items-center justify-center shrink-0`}
+                  key={item.id}
+                  className="rounded-xl border border-border/40 bg-secondary/20 p-4"
                 >
-                  <ItemIcon className={`w-4 h-4 ${cfg.color}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-[13px] font-medium font-mono truncate">{item.name}</h3>
+                  <div className="flex items-start gap-3 mb-3">
+                    <div
+                      className={`w-9 h-9 rounded-lg ${cfg.bg} flex items-center justify-center shrink-0`}
+                    >
+                      <ItemIcon className={`w-4 h-4 ${cfg.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-medium font-mono truncate">{item.name}</h3>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                        {item.desc}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                    {item.desc}
-                  </p>
-                </div>
-              </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className={`flex items-center gap-1 text-[11px] font-medium ${cfg.color}`}>
-                    <StatusIcon
-                      className={`w-3 h-3 ${
-                        item.status === 'checking' || item.status === 'installing'
-                          ? 'animate-spin'
-                          : ''
-                      }`}
-                    />
-                    {cfg.label}
-                  </span>
-                </div>
-                <div className="text-right">
-                  {item.installed ? (
-                    <span className="text-[11px] font-mono text-muted-foreground">
-                      {prerequisitesCaptions.versionPrefix}
-                      {item.installed}
-                    </span>
-                  ) : (
-                    <span className="text-[11px] text-muted-foreground/60">
-                      {prerequisitesCaptions.requiredPrefix}
-                      {item.required}
-                    </span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`flex items-center gap-1 text-xs font-medium ${cfg.color}`}>
+                        <StatusIcon
+                          className={`w-3 h-3 ${
+                            item.status === 'checking' || item.status === 'installing'
+                              ? 'animate-spin'
+                              : ''
+                          }`}
+                        />
+                        {cfg.label}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      {item.installed ? (
+                        <span className="text-xs font-mono text-muted-foreground">
+                          {prerequisitesCaptions.versionPrefix}
+                          {item.installed}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/60">
+                          {prerequisitesCaptions.requiredPrefix}
+                          {item.required}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {item.error && (
+                    <p className="mt-2 text-xs leading-snug text-destructive">{item.error}</p>
+                  )}
+
+                  {item.status === 'unsupported' && (
+                    <p className="mt-2 text-xs leading-snug text-muted-foreground">
+                      {prerequisitesCaptions.unsupportedHint}
+                    </p>
+                  )}
+
+                  {dependencyMissing && item.status !== 'unsupported' && (
+                    <p className="mt-2 text-xs leading-snug text-muted-foreground">
+                      {prerequisitesCaptions.dependencyHint}
+                    </p>
+                  )}
+
+                  {item.detail && item.status === 'attention' && (
+                    <p className="mt-2 text-xs leading-snug text-warning">{item.detail}</p>
+                  )}
+
+                  {(item.status === 'missing' ||
+                    item.status === 'attention' ||
+                    item.status === 'installing') && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void handleInstall(item.id)}
+                      disabled={isBusy || dependencyMissing}
+                      className="mt-3 h-7 w-full gap-1.5 text-xs"
+                    >
+                      {item.status === 'installing' ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Download className="w-3 h-3" />
+                      )}
+                      {item.status === 'installing'
+                        ? prerequisitesCaptions.actions.installing
+                        : item.status === 'attention'
+                          ? prerequisitesCaptions.actions.fix
+                          : prerequisitesCaptions.actions.install}
+                    </Button>
                   )}
                 </div>
-              </div>
-
-              {item.error && (
-                <p className="mt-2 text-[11px] leading-snug text-destructive">{item.error}</p>
-              )}
-
-              {item.status === 'unsupported' && (
-                <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
-                  {prerequisitesCaptions.unsupportedHint}
-                </p>
-              )}
-
-              {dependencyMissing && item.status !== 'unsupported' && (
-                <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
-                  {prerequisitesCaptions.dependencyHint}
-                </p>
-              )}
-
-              {item.detail && item.status === 'attention' && (
-                <p className="mt-2 text-[11px] leading-snug text-warning">{item.detail}</p>
-              )}
-
-              {(item.status === 'missing' ||
-                item.status === 'attention' ||
-                item.status === 'installing') && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void handleInstall(item.id)}
-                  disabled={isBusy || dependencyMissing}
-                  className="mt-3 h-7 w-full gap-1.5 text-xs"
-                >
-                  {item.status === 'installing' ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Download className="w-3 h-3" />
-                  )}
-                  {item.status === 'installing'
-                    ? prerequisitesCaptions.actions.installing
-                    : item.status === 'attention'
-                      ? prerequisitesCaptions.actions.fix
-                      : prerequisitesCaptions.actions.install}
-                </Button>
-              )}
-            </div>
-          )
-        })}
-      </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -101,9 +101,9 @@ export const captions = {
       title: 'Whisper Models',
       subtitle: 'Download and manage OpenAI Whisper transcription models',
       storageLabel: 'Storage',
-      activeLabel: 'Active',
+      modelsLabel: 'Models',
       emptyStorageValue: '0 B',
-      emptyActiveValue: 'None'
+      modelCountSuffix: 'downloaded'
     },
     prerequisites: {
       title: 'Prerequisites',
@@ -111,12 +111,19 @@ export const captions = {
         of: 'of',
         suffix: 'dependencies installed'
       },
+      ready: {
+        title: 'Environment ready',
+        subtitle: 'All required dependencies are installed'
+      },
       actions: {
         checkAll: 'Check all',
         install: 'Install',
         installing: 'Installing',
         openInstaller: 'Open installer',
-        fix: 'Fix'
+        fix: 'Fix',
+        fixAll: 'Fix all',
+        expand: 'Show details',
+        collapse: 'Hide details'
       },
       status: {
         ok: 'Installed',
@@ -182,7 +189,10 @@ export const captions = {
         more: 'Model actions',
         refresh: 'Refresh models',
         delete: 'Delete model',
-        deleting: 'Deleting...'
+        deleting: 'Deleting...',
+        confirmDelete: 'Delete?',
+        confirm: 'Delete',
+        cancel: 'Cancel'
       }
     },
     available: {
@@ -191,6 +201,17 @@ export const captions = {
       recommended: 'Recommended',
       languageCount: '99',
       progressSuffix: '%',
+      searchPlaceholder: 'Search models...',
+      noSearchResults: 'No models match your search',
+      sortLabel: 'Sort',
+      etaPrefix: 'ETA',
+      sort: {
+        recommended: 'Recommended',
+        sizeAsc: 'Size (small first)',
+        sizeDesc: 'Size (large first)',
+        speed: 'Fastest first',
+        accuracy: 'Most accurate first'
+      },
       empty: {
         title: 'All available models are downloaded',
         subtitle: 'Refresh downloaded models if you added or removed files outside the app.'

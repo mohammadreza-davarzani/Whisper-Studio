@@ -46,8 +46,10 @@ export default function DownloadedModels({
 }: DownloadedModelsProps) {
   const [deletingModelIds, setDeletingModelIds] = useState<Set<string>>(() => new Set())
   const [errorByModelId, setErrorByModelId] = useState<Record<string, string>>({})
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
 
   const handleDelete = async (id: string): Promise<void> => {
+    setConfirmingId(null)
     setDeletingModelIds((prev) => new Set([...prev, id]))
     setErrorByModelId((prev) => {
       const { [id]: _removed, ...rest } = prev
@@ -78,7 +80,7 @@ export default function DownloadedModels({
           <HardDrive className="w-4 h-4 text-success" />
           <div>
             <h2 className="text-sm font-semibold text-foreground">{downloadedCaptions.title}</h2>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {models.length} {downloadedCaptions.summary.suffix}{' '}
               {downloadedCaptions.summary.separator} {formatBytes(totalSizeBytes)}{' '}
               {downloadedCaptions.summary.storageSuffix}
@@ -124,12 +126,12 @@ export default function DownloadedModels({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-[13px] font-medium">{model.name}</h3>
+                    <h3 className="text-sm font-medium">{model.name}</h3>
                     <span className="px-1.5 py-0.5 rounded-md bg-secondary text-[10px] font-mono text-muted-foreground">
                       {model.precision}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Cpu className="w-3 h-3" /> {model.params}
                     </span>
@@ -151,30 +153,58 @@ export default function DownloadedModels({
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Tooltip>
-                    <TooltipTrigger>
+                  {confirmingId === model.id ? (
+                    <div className="flex items-center gap-1">
                       <Button
-                        variant="ghost"
-                        size="icon"
+                        variant="destructive"
+                        size="sm"
                         onClick={() => void handleDelete(model.id)}
                         disabled={deletingModelIds.has(model.id)}
-                        title={downloadedCaptions.actions.delete}
-                        aria-label={downloadedCaptions.actions.delete}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        className="h-8 gap-1.5 text-xs"
                       >
                         {deletingModelIds.has(model.id) ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : (
                           <Trash2 className="w-3.5 h-3.5" />
                         )}
+                        {downloadedCaptions.actions.confirm}
                       </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{downloadedCaptions.actions.delete}</TooltipContent>
-                  </Tooltip>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setConfirmingId(null)}
+                        disabled={deletingModelIds.has(model.id)}
+                        className="h-8 text-xs text-muted-foreground"
+                      >
+                        {downloadedCaptions.actions.cancel}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setConfirmingId(model.id)}
+                          disabled={deletingModelIds.has(model.id)}
+                          title={downloadedCaptions.actions.delete}
+                          aria-label={downloadedCaptions.actions.delete}
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        >
+                          {deletingModelIds.has(model.id) ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3.5 h-3.5" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>{downloadedCaptions.actions.delete}</TooltipContent>
+                    </Tooltip>
+                  )}
                 </div>
               </div>
               {errorByModelId[model.id] && (
-                <p className="mt-2 pl-14 text-[11px] leading-snug text-destructive">
+                <p className="mt-2 pl-14 text-xs leading-snug text-destructive">
                   {errorByModelId[model.id]}
                 </p>
               )}
