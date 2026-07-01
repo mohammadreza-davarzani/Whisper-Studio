@@ -26,13 +26,14 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatBytes, secondsToDisplay } from '@/lib/utils'
 import { captions } from '@/lib/strings'
+import { WHISPER_CATALOG_MODELS } from '@shared/constants'
 
 const availableCaptions = captions.models.available
 const downloadedCaptions = captions.models.downloaded
 const catalogCaptions = captions.models.catalog
 
-type AvailableModel = (typeof availableCaptions.items)[number]
-type ModelSpeed = AvailableModel['speed']
+type WhisperCatalogModel = (typeof WHISPER_CATALOG_MODELS)[number]
+type ModelSpeed = WhisperCatalogModel['speed']
 type SortKey = 'recommended' | 'sizeAsc' | 'sizeDesc' | 'speed' | 'accuracy'
 type FilterKey = 'all' | 'installed' | 'available'
 
@@ -192,8 +193,8 @@ export default function ModelsCatalog({
   const entries = useMemo<CatalogEntry[]>(() => {
     const matchedIds = new Set<string>()
 
-    const fromCatalog = availableCaptions.items.map((model) => {
-      const installed = downloadedModels.find((candidate) => isMatch(candidate, model.name)) ?? null
+    const fromCatalog = WHISPER_CATALOG_MODELS.map((model) => {
+      const installed = downloadedModels.find((candidate) => isMatch(candidate, model.id)) ?? null
 
       if (installed) {
         matchedIds.add(installed.id)
@@ -201,8 +202,8 @@ export default function ModelsCatalog({
 
       return {
         key: `catalog-${model.id}`,
-        name: model.name,
-        repoId: model.repoId,
+        name: model.id,
+        repoId: model.id,
         desc: model.desc,
         sizeLabel: installed ? formatBytes(installed.sizeBytes) : model.size,
         sizeBytes: installed ? installed.sizeBytes : parseSize(model.size),

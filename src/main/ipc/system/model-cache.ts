@@ -11,35 +11,12 @@ import type {
 } from '../../../shared/ipc'
 import { createScopedCache } from './cache'
 import { findPython } from './prerequisites'
+import { WHISPER_KNOWN_MODELS, WHISPER_DOWNLOADABLE_IDS } from '../../../shared/constants'
 
 // Known model metadata used to enrich local cache scan results.
-const knownModelInfo: Record<string, { params: string }> = {
-  tiny: { params: '39M' },
-  'tiny.en': { params: '39M' },
-  base: { params: '74M' },
-  'base.en': { params: '74M' },
-  small: { params: '244M' },
-  'small.en': { params: '244M' },
-  medium: { params: '769M' },
-  'medium.en': { params: '769M' },
-  large: { params: '1.55B' },
-  'large-v1': { params: '1.55B' },
-  'large-v2': { params: '1.55B' },
-  'large-v3': { params: '1.55B' },
-  turbo: { params: '809M' },
-  'large-v3-turbo': { params: '809M' }
-}
+// Defined in shared/constants.ts — WHISPER_KNOWN_MODELS.
 
-export const downloadableModelRepoIds = [
-  'tiny',
-  'base',
-  'small',
-  'medium',
-  'large-v2',
-  'large-v3',
-  'turbo',
-  'large-v3-turbo'
-] as const
+// Downloadable model IDs defined in shared/constants.ts — WHISPER_DOWNLOADABLE_IDS.
 
 type CommandResult = {
   exitCode: number
@@ -47,10 +24,8 @@ type CommandResult = {
   stdout: string
 }
 
-function isKnownDownloadableModel(
-  modelId: string
-): modelId is (typeof downloadableModelRepoIds)[number] {
-  return downloadableModelRepoIds.includes(modelId as (typeof downloadableModelRepoIds)[number])
+function isKnownDownloadableModel(modelId: string): boolean {
+  return WHISPER_DOWNLOADABLE_IDS.includes(modelId)
 }
 
 function resolveExitCode(error: unknown): number {
@@ -98,7 +73,7 @@ async function scanDownloadedModels(): Promise<DownloadedWhisperModelsResult> {
     return { models: [], totalSizeBytes: 0 }
   }
 
-  const modelOrder = Object.keys(knownModelInfo)
+  const modelOrder = Object.keys(WHISPER_KNOWN_MODELS)
   const orderByModel = new Map(modelOrder.map((name, index) => [name, index]))
   const models: DownloadedWhisperModel[] = []
 
@@ -115,7 +90,7 @@ async function scanDownloadedModels(): Promise<DownloadedWhisperModelsResult> {
       continue
     }
 
-    const info = knownModelInfo[modelName]
+    const info = WHISPER_KNOWN_MODELS[modelName]
 
     models.push({
       downloadedAt: fileStats.mtimeMs,

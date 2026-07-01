@@ -4,6 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { FolderOpen } from 'lucide-react'
 import { FALLBACK_FORMAT_ICON, FORMAT_ICONS } from '@/lib/format-icons'
 import { captions } from '@/lib/strings'
+import { WHISPER_CATALOG_MODELS } from '@shared/constants'
 import type { TranscriptionFile } from './files-step'
 import type { TranscriptionSettings } from './settings-step'
 
@@ -11,7 +12,6 @@ const FORMATS = captions.newTranscription.output.formats.map((format) => ({
   ...format,
   icon: FORMAT_ICONS[format.value] ?? FALLBACK_FORMAT_ICON
 }))
-const MODEL_DETAILS = captions.newTranscription.settings.models
 const ESTIMATE_CAPTIONS = captions.newTranscription.output.estimated
 const estimatedBytesPerSecondByType = {
   audio: 16_000,
@@ -75,16 +75,16 @@ function getDurationEstimate(file: TranscriptionFile | null): DurationEstimate {
   }
 }
 
-function getModelDetails(modelName: string): (typeof MODEL_DETAILS)[number] | null {
+function getModelDetails(modelName: string): (typeof WHISPER_CATALOG_MODELS)[number] | null {
   const normalizedName = modelName.toLowerCase()
 
   return (
-    MODEL_DETAILS.find((model) => {
-      const normalizedValue = model.value.toLowerCase()
+    WHISPER_CATALOG_MODELS.find((model) => {
+      const normalizedId = model.id.toLowerCase()
       return (
-        normalizedName === normalizedValue ||
-        normalizedName.includes(`-${normalizedValue}`) ||
-        normalizedName.includes(normalizedValue)
+        normalizedName === normalizedId ||
+        normalizedName.includes(`-${normalizedId}`) ||
+        normalizedName.includes(normalizedId)
       )
     }) ?? null
   )

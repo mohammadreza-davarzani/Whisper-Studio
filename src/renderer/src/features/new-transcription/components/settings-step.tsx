@@ -15,8 +15,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown, Info, Cpu, Zap, Brain, Users, Volume2, Waves, Languages } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { captions } from '@/lib/strings'
+import { WHISPER_CATALOG_MODELS } from '@shared/constants'
 
-const MODEL_DETAILS = captions.newTranscription.settings.models
 const LANGUAGES = captions.newTranscription.settings.languages
 const settingRows = captions.newTranscription.settings.rows
 
@@ -253,7 +253,7 @@ export default function StepSettings({
           <div className="px-5 py-3">
             <div className="grid grid-cols-4 gap-4">
               {(() => {
-                const m = MODEL_DETAILS.find((x) => x.value === settings.model)
+                const m = WHISPER_CATALOG_MODELS.find((x) => x.id === settings.model)
                 const downloadedModel = downloadedModels.find((x) => x.name === settings.model)
                 return m ? (
                   <>
