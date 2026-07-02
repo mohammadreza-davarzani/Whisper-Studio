@@ -2,13 +2,13 @@ import { ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { basename, join } from 'node:path'
 import { writeFile } from 'node:fs/promises'
 import {
+  DEFAULT_TRANSCRIPTION_ENGINE_ID,
   IPC_CHANNELS,
   type TranscriptionRecord,
   type WhisperTranscriptionRequest,
   type WhisperTranscriptionResult
 } from '../../../shared/ipc'
-import { runWhisper, getOutputDirectory } from './executor'
-import { parseWhisperJson } from './parser'
+import { getTranscriptionEngine } from './engines/registry'
 
 export function registerTranscriptionHandlers(): void {
   ipcMain.handle(
@@ -17,11 +17,12 @@ export function registerTranscriptionHandlers(): void {
       event: IpcMainInvokeEvent,
       request: WhisperTranscriptionRequest
     ): Promise<WhisperTranscriptionResult> => {
-      const runResult = await runWhisper(
-        request,
-        (chunk) => event.sender.send(IPC_CHANNELS.whisperOutputChunk, chunk),
-        (update) => event.sender.send(IPC_CHANNELS.whisperProgressUpdate, update)
-      )
+      const engineId = request.engine ?? DEFAULT_TRANSCRIPTION_ENGINE_ID
+      const engine = getTranscriptionEngine(engineId)
+      const runResult = await engine.run(request, {
+        emitOutput: (chunk) => event.sender.send(IPC_CHANNELS.whisperOutputChunk, chunk),
+        emitProgress: (update) => event.sender.send(IPC_CHANNELS.whisperProgressUpdate, update)
+      })
 
       if (!runResult.ok) {
         return {
@@ -32,21 +33,19 @@ export function registerTranscriptionHandlers(): void {
         }
       }
 
-      const { command, exitCode, outputDirectory, stdout, stderr } = runResult.value
-
-      const parseResult = await parseWhisperJson(outputDirectory, basename(request.filePath))
-      const segments = parseResult.ok ? parseResult.value.segments : []
-      const jsonFile = parseResult.ok ? parseResult.value.jsonFile : null
+      const { command, exitCode, outputDirectory, outputFiles, segments, stdout, stderr } =
+        runResult.value
 
       const record: TranscriptionRecord = {
         id: basename(outputDirectory),
         sourceFileName: basename(request.filePath),
         sourceFilePath: request.filePath,
+        engine: engine.id,
         model: request.model || 'base',
         language: request.language || 'auto',
         compute: request.compute,
         outputDirectory,
-        outputFiles: jsonFile ? [jsonFile] : [],
+        outputFiles,
         segments,
         durationSeconds: segments.length > 0 ? segments[segments.length - 1].end : null,
         createdAt: Date.now(),
@@ -71,5 +70,3 @@ export function registerTranscriptionHandlers(): void {
     }
   )
 }
-
-export { getOutputDirectory }

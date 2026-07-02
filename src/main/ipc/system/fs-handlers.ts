@@ -1,6 +1,8 @@
 import { dialog, ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { readFile, writeFile } from 'node:fs/promises'
-import { IPC_CHANNELS } from '../../../shared/ipc'
+import { basename } from 'node:path'
+import { FileSelection, IPC_CHANNELS } from '../../../shared/ipc'
+import { SUPPORTED_MEDIA_EXTENSIONS } from '@shared/constants'
 
 export function registerFsHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.selectDirectory, async (): Promise<string | null> => {
@@ -23,5 +25,21 @@ export function registerFsHandlers(): void {
       await writeFile(filePath, content, 'utf8')
     }
   )
-}
 
+  ipcMain.handle(IPC_CHANNELS.selectFile, async (): Promise<FileSelection> => {
+    const selection = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [
+        { name: 'Audio and video', extensions: [...SUPPORTED_MEDIA_EXTENSIONS] },
+        { name: 'All files', extensions: ['*'] }
+      ]
+    })
+
+    if (selection.canceled || selection.filePaths.length === 0) {
+      return { canceled: true }
+    }
+
+    const filePath = selection.filePaths[0]
+    return { canceled: false, filePath, fileName: basename(filePath) }
+  })
+}

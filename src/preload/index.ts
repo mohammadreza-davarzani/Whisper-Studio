@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import {
+  FileSelection,
   IPC_CHANNELS,
   type AppApi,
   type AppInfo,
@@ -17,7 +18,6 @@ import {
   type TranscriptionApi,
   type TranscriptionRecord,
   type UpdateCheckResult,
-  type WhisperFileSelection,
   type WhisperModelActionResult,
   type WhisperModelDownloadProgress,
   type WhisperOutputChunk,
@@ -59,8 +59,7 @@ const modelApi: ModelApi = {
 }
 
 const transcriptionApi: TranscriptionApi = {
-  selectWhisperFile: () =>
-    ipcRenderer.invoke(IPC_CHANNELS.whisperSelectFile) as Promise<WhisperFileSelection>,
+  selectWhisperFile: () => ipcRenderer.invoke(IPC_CHANNELS.selectFile) as Promise<FileSelection>,
   transcribeWithWhisper: (request: WhisperTranscriptionRequest) =>
     ipcRenderer.invoke(
       IPC_CHANNELS.whisperTranscribe,

@@ -3,6 +3,9 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { IPC_CHANNELS, type AppSettings } from '../../../shared/ipc'
 
+export const GITHUB_LATEST_RELEASE_URL =
+  'https://api.github.com/repos/mohammadKarimi/Whisper-Studio/releases/latest'
+
 const DEFAULT_SETTINGS: AppSettings = {
   defaultModel: null,
   defaultLanguage: 'Auto',
@@ -28,9 +31,6 @@ async function readSettings(): Promise<AppSettings> {
 async function writeSettings(settings: AppSettings): Promise<void> {
   await writeFile(getSettingsPath(), JSON.stringify(settings, null, 2), 'utf-8')
 }
-
-const GITHUB_LATEST_RELEASE_URL =
-  'https://api.github.com/repos/mohammadKarimi/Whisper-Studio/releases/latest'
 
 interface GitHubRelease {
   tag_name: string

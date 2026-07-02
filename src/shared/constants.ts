@@ -269,6 +269,8 @@ export const WHISPER_DOWNLOADABLE_IDS: readonly string[] = [
  */
 export const PYTHON_TARGET_VERSION = '3.12' as const
 
+export const MODEL_FETCHING_CACHE_DURATION_MS = 5000
+
 /**
  * Maps lowercase language display names to their ISO 639 codes.
  * Used by the Whisper CLI `--language` argument.
