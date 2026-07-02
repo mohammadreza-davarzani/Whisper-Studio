@@ -44,6 +44,10 @@ const pipInstallPackages: Partial<Record<PrerequisiteCheckId, string>> = {
   torch: 'torch'
 }
 
+const PYTHON_PACKAGE_MAX_EXCLUSIVE = [3, 13] as const
+
+const unsupportedPythonMessage = `Python 3.13 was detected, but Whisper dependencies are not reliable with it yet. Install Python ${PYTHON_TARGET_VERSION}, then retry.`
+
 const installerUrls: Partial<Record<PrerequisiteCheckId, string>> = {
   python: 'https://www.python.org/downloads/',
   ffmpeg: 'https://www.gyan.dev/ffmpeg/builds/',
@@ -309,6 +313,21 @@ function checkVersion(
   }
 }
 
+function isUnsupportedPythonForPackages(version: string | null): boolean {
+  return Boolean(version && compareVersions(version, PYTHON_PACKAGE_MAX_EXCLUSIVE) >= 0)
+}
+
+function normalizePipInstallError(stderr: string): string {
+  if (/DECRYPTION_FAILED_OR_BAD_RECORD_MAC|SSLError|ssl/i.test(stderr)) {
+    return [
+      'pip failed while downloading packages over SSL.',
+      'Check your network/VPN/proxy and retry; the installer now retries and bypasses pip cache.'
+    ].join(' ')
+  }
+
+  return stderr
+}
+
 // ---------------------------------------------------------------------------
 // Check pipeline
 // ---------------------------------------------------------------------------
@@ -316,6 +335,18 @@ function checkVersion(
 async function checkPython(): Promise<{ check: PrerequisiteCheck; python: CommandResult | null }> {
   const python = await findPython()
   const installed = python ? parseVersion(python.output) : null
+
+  if (isUnsupportedPythonForPackages(installed)) {
+    return {
+      check: {
+        id: 'python',
+        installed,
+        status: 'attention',
+        detail: unsupportedPythonMessage
+      },
+      python
+    }
+  }
 
   return { check: checkVersion('python', installed, [3, 8]), python }
 }
@@ -514,7 +545,31 @@ async function installViaPip(
     }
   }
 
-  const args = [...python.prefixArgs, '-m', 'pip', 'install', pipPackage]
+  const pythonVersion = parseVersion(python.output)
+
+  if (isUnsupportedPythonForPackages(pythonVersion)) {
+    return {
+      action: 'installed',
+      id,
+      ok: false,
+      stderr: unsupportedPythonMessage
+    }
+  }
+
+  const args = [
+    ...python.prefixArgs,
+    '-m',
+    'pip',
+    'install',
+    '--upgrade',
+    '--retries',
+    '5',
+    '--timeout',
+    '60',
+    '--disable-pip-version-check',
+    '--no-cache-dir',
+    pipPackage
+  ]
   const result = await runDetailedCommand(python.command, args)
   clearPrerequisiteCache()
 
@@ -523,7 +578,7 @@ async function installViaPip(
     command: `${python.command} ${args.join(' ')}`,
     id,
     ok: result.exitCode === 0,
-    stderr: result.stderr,
+    stderr: normalizePipInstallError(result.stderr),
     stdout: result.stdout
   }
 }

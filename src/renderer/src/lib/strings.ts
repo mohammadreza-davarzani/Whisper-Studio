@@ -143,7 +143,7 @@ export const captions = {
         {
           id: 'python',
           name: 'Python',
-          required: '3.8+',
+          required: '3.8-3.12',
           desc: 'Runtime environment for Whisper'
         },
         {
