@@ -2,8 +2,8 @@ import { ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { join } from 'node:path'
 import { readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { IPC_CHANNELS, type TranscriptionRecord } from '../../../shared/ipc'
-import { getOutputDirectory } from './executor'
-import { parseWhisperJson } from './parser'
+import { parseWhisperJson } from '../../parser'
+import { getOutputDirectory } from '../../paths'
 
 export function registerRecordHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.listTranscriptions, async (): Promise<TranscriptionRecord[]> => {

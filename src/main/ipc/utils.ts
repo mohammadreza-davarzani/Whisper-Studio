@@ -1,4 +1,4 @@
-import { WHISPER_LANGUAGE_CODES } from '../../../shared/constants'
+import { WHISPER_LANGUAGE_CODES } from '../../shared/constants'
 
 export function getPythonEnv(): NodeJS.ProcessEnv {
   return {

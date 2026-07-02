@@ -1,31 +1,35 @@
-import { shell } from 'electron'
+import { ipcMain, shell } from 'electron'
 import { execFile } from 'node:child_process'
 import type {
   PrerequisiteCheck,
   PrerequisiteCheckId,
   PrerequisiteInstallResult
 } from '../../../shared/ipc'
-import { PYTHON_TARGET_VERSION } from '../../../shared/constants'
-import { createScopedCache } from './cache'
+import { IPC_CHANNELS } from '../../../shared/ipc'
+import { MODEL_FETCHING_CACHE_DURATION_MS, PYTHON_TARGET_VERSION } from '../../../shared/constants'
+import { createScopedCache } from '../../cache'
+import {
+  CommandCandidate,
+  CommandResult,
+  findPython,
+  parseVersion,
+  runCommand,
+  runCommandCandidate
+} from '../command'
 
-type CommandResult = {
-  command: string
-  output: string
-  prefixArgs: string[]
-}
-
-type CommandCandidate = {
-  args: readonly string[]
-  command: string
-  prefixArgs?: readonly string[]
-  timeoutMs?: number
-}
+// ---------------------------------------------------------------------------
+// Shared types
+// ---------------------------------------------------------------------------
 
 type DetailedCommandResult = {
   exitCode: number | null
   stderr: string
   stdout: string
 }
+
+// ---------------------------------------------------------------------------
+// Constants / config
+// ---------------------------------------------------------------------------
 
 export const prerequisiteIds: readonly PrerequisiteCheckId[] = [
   'python',
@@ -200,29 +204,48 @@ export function resolveFallbackInstallerUrl(
 
 const CUDA_TORCH_INDEX_URL = 'https://download.pytorch.org/whl/cu124'
 
-function runCommand(
-  command: string,
-  args: readonly string[],
-  timeoutMs = 3000
-): Promise<string | null> {
-  return new Promise((resolve) => {
-    execFile(
-      command,
-      [...args],
-      { timeout: timeoutMs, windowsHide: true },
-      (error, stdout, stderr) => {
-        const output = `${stdout}${stderr}`.trim()
+// ---------------------------------------------------------------------------
+// Module-level cache
+// ---------------------------------------------------------------------------
 
-        if (error && !output) {
-          resolve(null)
-          return
-        }
+const prerequisitesCache = createScopedCache(checkPrerequisites, MODEL_FETCHING_CACHE_DURATION_MS)
 
-        resolve(output || null)
-      }
-    )
-  })
+function clearPrerequisiteCache(): void {
+  prerequisitesCache.invalidate()
 }
+
+// ---------------------------------------------------------------------------
+// IPC registration
+// ---------------------------------------------------------------------------
+
+export function registerPrerequisiteHandlers(): void {
+  ipcMain.handle(IPC_CHANNELS.prerequisites, async (): Promise<PrerequisiteCheck[]> => {
+    return getCachedPrerequisites()
+  })
+
+  ipcMain.handle(
+    IPC_CHANNELS.prerequisiteInstall,
+    async (_event, id: PrerequisiteCheckId): Promise<PrerequisiteInstallResult> => {
+      if (!prerequisiteIds.includes(id)) {
+        return { action: 'opened', id, ok: false, stderr: 'Unknown prerequisite.' }
+      }
+
+      return installPrerequisite(id)
+    }
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+export async function getCachedPrerequisites(): Promise<PrerequisiteCheck[]> {
+  return prerequisitesCache.get()
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function runDetailedCommand(
   command: string,
@@ -250,32 +273,6 @@ function runDetailedCommand(
       }
     )
   })
-}
-
-async function runCommandCandidate(
-  candidates: readonly CommandCandidate[]
-): Promise<CommandResult | null> {
-  for (const candidate of candidates) {
-    const prefixArgs = [...(candidate.prefixArgs ?? [])]
-    const output = await runCommand(
-      candidate.command,
-      [...prefixArgs, ...candidate.args],
-      candidate.timeoutMs
-    )
-
-    if (output) {
-      return { command: candidate.command, output, prefixArgs }
-    }
-  }
-
-  return null
-}
-
-function parseVersion(output: string): string | null {
-  // Match dotted versions (3.11.0) or date versions (20231117)
-  return (
-    output.match(/\d+(?:\.\d+)+(?:[A-Za-z0-9.+-]*)?/)?.[0] ?? output.match(/\b\d{8}\b/)?.[0] ?? null
-  )
 }
 
 function compareVersions(actual: string, required: readonly number[]): number {
@@ -312,33 +309,9 @@ function checkVersion(
   }
 }
 
-// Shared Python discovery for system checks and model management.
-// Prefers the pinned target version (e.g. python3.12 / py -3.12) so that an installed
-// supported interpreter is used even when a newer, unsupported Python is also on PATH.
-export async function findPython(): Promise<CommandResult | null> {
-  const candidates = [
-    { command: `python${PYTHON_TARGET_VERSION}`, args: ['--version'], timeoutMs: 1500 },
-    {
-      command: 'py',
-      prefixArgs: [`-${PYTHON_TARGET_VERSION}`],
-      args: ['--version'],
-      timeoutMs: 1500
-    },
-    { command: 'python', args: ['--version'], timeoutMs: 2500 },
-    { command: 'python3', args: ['--version'], timeoutMs: 1200 },
-    { command: 'py', prefixArgs: ['-3'], args: ['--version'], timeoutMs: 1200 }
-  ]
-
-  for (const candidate of candidates) {
-    const result = await runCommandCandidate([candidate])
-
-    if (result && parseVersion(result.output)) {
-      return result
-    }
-  }
-
-  return null
-}
+// ---------------------------------------------------------------------------
+// Check pipeline
+// ---------------------------------------------------------------------------
 
 async function checkPython(): Promise<{ check: PrerequisiteCheck; python: CommandResult | null }> {
   const python = await findPython()
@@ -497,6 +470,7 @@ async function checkCudaWithTorch(
   }
 }
 
+// Runs all prerequisite checks in parallel and merges results in display order.
 async function checkPrerequisites(): Promise<PrerequisiteCheck[]> {
   const { check: pythonCheck, python } = await checkPython()
   const [ffmpegCheck, pythonPackageChecks, cudaByTorchCheck] = await Promise.all([
@@ -518,17 +492,8 @@ async function checkPrerequisites(): Promise<PrerequisiteCheck[]> {
   )
 }
 
-const prerequisitesCache = createScopedCache(checkPrerequisites, 5000)
-
-export async function getCachedPrerequisites(): Promise<PrerequisiteCheck[]> {
-  return prerequisitesCache.get()
-}
-
-function clearPrerequisiteCache(): void {
-  prerequisitesCache.invalidate()
-}
-
 // ---------------------------------------------------------------------------
+// Install pipeline
 // Install strategies — one function per prerequisite type.
 // To add a new prerequisite: add its id to `prerequisiteIds`, add a check to
 // `checkPrerequisites`, and add one entry to `INSTALLERS` below.
@@ -582,10 +547,12 @@ function getFallbackInstallerUrl(id: PrerequisiteCheckId): string | null {
 async function installSystemPrerequisite(
   id: PrerequisiteCheckId
 ): Promise<PrerequisiteInstallResult> {
+  // Step 1 – resolve platform install candidates and the fallback URL
   const platform = getInstallPlatform()
   const candidates = platform ? resolveSystemInstallCandidates(platform, id) : []
   const fallbackUrl = getFallbackInstallerUrl(id)
 
+  // Step 2 – probe each package manager; use the first one that responds
   for (const candidate of candidates) {
     const probed = await runCommand(candidate.probe, ['--version'], 4000)
 
@@ -593,6 +560,7 @@ async function installSystemPrerequisite(
       continue
     }
 
+    // Step 3 – run the install command and build the result
     const result = await runDetailedCommand(candidate.command, candidate.args)
     const command = `${candidate.command} ${candidate.args.join(' ')}`
     clearPrerequisiteCache()
@@ -610,7 +578,7 @@ async function installSystemPrerequisite(
     }
   }
 
-  // No package manager found — open the platform download page instead.
+  // Step 4 – no package manager found; open the platform download page instead
   if (fallbackUrl) {
     return installViaUrl(id, fallbackUrl)
   }
@@ -626,6 +594,7 @@ async function installSystemPrerequisite(
 async function installCuda(): Promise<PrerequisiteInstallResult> {
   const id: PrerequisiteCheckId = 'cuda'
 
+  // Step 1 – guard: CUDA is not supported on macOS
   if (process.platform === 'darwin') {
     return {
       action: 'installed',
@@ -636,6 +605,7 @@ async function installCuda(): Promise<PrerequisiteInstallResult> {
     }
   }
 
+  // Step 2 – resolve Python; fall back to opening the CUDA download page
   const python = await findPython()
 
   if (!python) {
@@ -643,6 +613,7 @@ async function installCuda(): Promise<PrerequisiteInstallResult> {
     return { action: 'opened', id, ok: true }
   }
 
+  // Step 3 – install the CUDA-enabled torch build via pip
   const args = [
     ...python.prefixArgs,
     '-m',
@@ -668,9 +639,11 @@ async function installCuda(): Promise<PrerequisiteInstallResult> {
     }
   }
 
+  // Step 4 – verify GPU is now accessible via torch
   const cudaCheck = await checkCudaWithTorch(python, TORCH_PROBE_TIMEOUT_AFTER_INSTALL_MS)
   clearPrerequisiteCache()
 
+  // Step 5 – build the result
   return {
     action: 'installed',
     command: `${python.command} ${args.join(' ')}`,

@@ -1,6 +1,6 @@
-import { app } from 'electron'
-import { cpus, totalmem } from 'node:os'
-import type { AppInfo, DesktopPlatform, SystemStatus } from '../../../shared/ipc'
+import { app, ipcMain } from 'electron'
+import { IPC_CHANNELS, SystemStatus } from '../../../shared/ipc'
+import { cpus, totalmem } from 'os'
 
 type BasicGpuDevice = {
   active?: boolean
@@ -12,22 +12,12 @@ type BasicGpuInfo = {
   gpuDevice?: BasicGpuDevice[]
 }
 
+export function registerSystemStatusHandlers(): void {
+  ipcMain.handle(IPC_CHANNELS.systemStatus, getSystemStatus)
+}
+
 function formatMemory(bytes: number): string {
   return `${Math.round(bytes / 1024 / 1024 / 1024)} GB`
-}
-
-export function getAppInfo(): AppInfo {
-  return {
-    name: app.getName(),
-    version: app.getVersion(),
-    electron: process.versions.electron,
-    chrome: process.versions.chrome,
-    node: process.versions.node
-  }
-}
-
-export function getDesktopPlatform(): DesktopPlatform {
-  return process.platform as DesktopPlatform
 }
 
 async function getPrimaryGpu(): Promise<string> {

@@ -1,20 +1,18 @@
-import { app } from 'electron'
 import { spawn } from 'node:child_process'
 import { mkdir } from 'node:fs/promises'
 import { basename, dirname, extname, join } from 'node:path'
 import { StringDecoder } from 'node:string_decoder'
+import type { WhisperTranscriptionRequest } from '../../../../shared/ipc'
+import { TranscriptionError } from '../../../../shared/errors'
+import { type Result, err, ok } from '../../../../shared/types'
+import { parseWhisperJson } from '../../../parser'
+import { getOutputDirectory } from '../../../paths'
 import type {
-  WhisperOutputChunk,
-  WhisperProgressUpdate,
-  WhisperTranscriptionRequest
-} from '../../../shared/ipc'
-import { TranscriptionError } from '../../../shared/errors'
-import { type Result, ok, err } from '../../../shared/types'
-import { getPythonEnv, normalizeLanguage, sanitizeFileName, getTimestamp } from './utils'
-
-export function getOutputDirectory(): string {
-  return join(app.getPath('documents'), 'Whisper Studio', 'exports')
-}
+  TranscriptionEngine,
+  TranscriptionEngineContext,
+  TranscriptionEngineResult
+} from './types'
+import { getPythonEnv, getTimestamp, normalizeLanguage, sanitizeFileName } from '../../utils'
 
 function buildArgs(request: WhisperTranscriptionRequest, outputDir: string): string[] {
   const device = request.compute === 'gpu' ? 'cuda' : 'cpu'
@@ -50,28 +48,18 @@ function buildArgs(request: WhisperTranscriptionRequest, outputDir: string): str
   return args
 }
 
-export interface ExecutorResult {
-  args: string[]
-  command: string
-  exitCode: number | null
-  outputDirectory: string
-  stderr: string
-  stdout: string
-}
-
-export async function runWhisper(
+async function runOpenAiWhisper(
   request: WhisperTranscriptionRequest,
-  onOutput: (chunk: WhisperOutputChunk) => void,
-  onProgress: (update: WhisperProgressUpdate) => void
-): Promise<Result<ExecutorResult, TranscriptionError>> {
+  { emitOutput, emitProgress }: TranscriptionEngineContext
+): Promise<Result<TranscriptionEngineResult, TranscriptionError>> {
   if (typeof request.filePath !== 'string' || !request.filePath.trim()) {
     return err(
       new TranscriptionError('A valid media file path is required for transcription.', null, '')
     )
   }
 
-  onProgress({ phase: 'checking-command', state: 'complete', message: 'Starting transcription.' })
-  onProgress({ phase: 'checking-whisper', state: 'complete', message: 'Environment ready.' })
+  emitProgress({ phase: 'checking-command', state: 'complete', message: 'Starting transcription.' })
+  emitProgress({ phase: 'checking-whisper', state: 'complete', message: 'Environment ready.' })
 
   const extension = extname(request.filePath)
   const baseName = sanitizeFileName(basename(request.filePath, extension)) || 'transcript'
@@ -81,9 +69,9 @@ export async function runWhisper(
   const args = buildArgs(request, outputDirectory)
   const command = `whisper ${args.join(' ')}`
 
-  onProgress({ phase: 'sending-command', state: 'complete', message: command })
+  emitProgress({ phase: 'sending-command', state: 'complete', message: command })
 
-  return new Promise<Result<ExecutorResult, TranscriptionError>>((resolve) => {
+  return new Promise<Result<TranscriptionEngineResult, TranscriptionError>>((resolve) => {
     const child = spawn('whisper', args, {
       cwd: dirname(request.filePath),
       env: getPythonEnv(),
@@ -95,7 +83,7 @@ export async function runWhisper(
     const stdoutDecoder = new StringDecoder('utf8')
     const stderrDecoder = new StringDecoder('utf8')
 
-    onProgress({
+    emitProgress({
       phase: 'transcribing',
       state: 'active',
       message: 'Loading model and transcribing...'
@@ -104,30 +92,34 @@ export async function runWhisper(
     child.stdout.on('data', (chunk: Buffer) => {
       stdoutChunks.push(chunk)
       const text = stdoutDecoder.write(chunk)
-      if (text) onOutput({ stream: 'stdout', text })
+      if (text) emitOutput({ stream: 'stdout', text })
     })
 
     child.stderr.on('data', (chunk: Buffer) => {
       stderrChunks.push(chunk)
       const text = stderrDecoder.write(chunk)
-      if (text) onOutput({ stream: 'stderr', text })
+      if (text) emitOutput({ stream: 'stderr', text })
     })
 
     child.on('error', (spawnError) => {
-      onProgress({ phase: 'error', state: 'error', message: spawnError.message })
+      emitProgress({ phase: 'error', state: 'error', message: spawnError.message })
       resolve(err(new TranscriptionError(spawnError.message, null, spawnError.message)))
     })
 
-    child.on('close', (exitCode) => {
+    child.on('close', async (exitCode) => {
       const remaining = stdoutDecoder.end()
       const remainingErr = stderrDecoder.end()
-      if (remaining) onOutput({ stream: 'stdout', text: remaining })
-      if (remainingErr) onOutput({ stream: 'stderr', text: remainingErr })
+      if (remaining) emitOutput({ stream: 'stdout', text: remaining })
+      if (remainingErr) emitOutput({ stream: 'stderr', text: remainingErr })
 
       const stdout = Buffer.concat(stdoutChunks).toString('utf8')
       const stderr = Buffer.concat(stderrChunks).toString('utf8')
+      const parseResult = await parseWhisperJson(outputDirectory, basename(request.filePath))
+      const segments = parseResult.ok ? parseResult.value.segments : []
+      const outputFiles =
+        parseResult.ok && parseResult.value.jsonFile ? [parseResult.value.jsonFile] : []
 
-      onProgress({
+      emitProgress({
         phase: exitCode === 0 ? 'complete' : 'error',
         state: exitCode === 0 ? 'complete' : 'error',
         message:
@@ -142,10 +134,18 @@ export async function runWhisper(
           command,
           exitCode,
           outputDirectory,
+          outputFiles,
+          segments,
           stderr,
           stdout
         })
       )
     })
   })
+}
+
+export const openAiWhisperEngine: TranscriptionEngine = {
+  id: 'openai-whisper',
+  label: 'OpenAI Whisper',
+  run: runOpenAiWhisper
 }

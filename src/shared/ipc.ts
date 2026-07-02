@@ -13,7 +13,6 @@ export const IPC_CHANNELS = {
   windowMinimize: 'window:minimize',
   windowMaximize: 'window:maximize',
   windowClose: 'window:close',
-  whisperSelectFile: 'whisper:select-file',
   whisperTranscribe: 'whisper:transcribe',
   whisperOutputChunk: 'whisper:output-chunk',
   whisperProgressUpdate: 'whisper:progress-update',
@@ -22,6 +21,7 @@ export const IPC_CHANNELS = {
   readTextFile: 'fs:read-text-file',
   writeTextFile: 'fs:write-text-file',
   selectDirectory: 'fs:select-directory',
+  selectFile: 'fs:select-file',
   settingsGet: 'settings:get',
   settingsSet: 'settings:set',
   appCheckUpdate: 'app:check-update',
@@ -107,7 +107,7 @@ export interface WhisperModelDownloadProgress {
   state: WhisperModelDownloadProgressState
 }
 
-export interface WhisperFileSelection {
+export interface FileSelection {
   canceled: boolean
   filePath?: string
   fileName?: string
@@ -125,9 +125,14 @@ export interface WhisperTranscriptionResult {
   transcriptPath?: string
 }
 
+export type TranscriptionEngineType = 'openai-whisper'
+
+export const DEFAULT_TRANSCRIPTION_ENGINE_ID: TranscriptionEngineType = 'openai-whisper'
+
 export interface WhisperTranscriptionRequest {
   compute: string
   diarization: boolean
+  engine?: TranscriptionEngineType
   filePath: string
   formats: string[]
   language: string
@@ -144,7 +149,7 @@ export interface WhisperOutputFile {
   sizeBytes: number
 }
 
-export interface WhisperSegment {
+export interface Segment {
   id: number
   start: number
   end: number
@@ -155,12 +160,13 @@ export interface TranscriptionRecord {
   id: string
   sourceFileName: string
   sourceFilePath: string
+  engine?: TranscriptionEngineType
   model: string
   language: string
   compute: string
   outputDirectory: string
   outputFiles: WhisperOutputFile[]
-  segments: WhisperSegment[]
+  segments: Segment[]
   durationSeconds: number | null
   createdAt: number
   editedAt?: number
@@ -210,7 +216,7 @@ export interface ModelApi {
 
 /** Whisper transcription workflow and saved transcription records. */
 export interface TranscriptionApi {
-  selectWhisperFile: () => Promise<WhisperFileSelection>
+  selectWhisperFile: () => Promise<FileSelection>
   transcribeWithWhisper: (
     request: WhisperTranscriptionRequest
   ) => Promise<WhisperTranscriptionResult>
