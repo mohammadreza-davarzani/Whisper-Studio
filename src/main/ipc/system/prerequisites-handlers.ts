@@ -675,6 +675,12 @@ async function installCuda(): Promise<PrerequisiteInstallResult> {
     'pip',
     'install',
     '--upgrade',
+    '--retries',
+    '5',
+    '--timeout',
+    '60',
+    '--disable-pip-version-check',
+    '--no-cache-dir',
     'torch',
     'torchvision',
     'torchaudio',
@@ -689,7 +695,7 @@ async function installCuda(): Promise<PrerequisiteInstallResult> {
       command: `${python.command} ${args.join(' ')}`,
       id,
       ok: false,
-      stderr: result.stderr,
+      stderr: normalizePipInstallError(result.stderr),
       stdout: result.stdout
     }
   }
