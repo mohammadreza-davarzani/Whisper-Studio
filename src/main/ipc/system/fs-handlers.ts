@@ -2,7 +2,7 @@ import { dialog, ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { readFile, writeFile } from 'node:fs/promises'
 import { basename } from 'node:path'
 import { FileSelection, IPC_CHANNELS } from '../../../shared/ipc'
-import { SUPPORTED_MEDIA_EXTENSIONS } from '@shared/constants'
+import { SUPPORTED_MEDIA_EXTENSIONS } from '../../../shared/constants'
 
 export function registerFsHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.selectDirectory, async (): Promise<string | null> => {
