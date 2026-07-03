@@ -15,7 +15,12 @@ import {
   Wrench
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import type { AppApi, PrerequisiteCheckId, PrerequisiteCheckStatus, PrerequisiteInstallProgress } from '@shared/ipc'
+import type {
+  AppApi,
+  PrerequisiteCheckId,
+  PrerequisiteCheckStatus,
+  PrerequisiteInstallProgress
+} from '@shared/ipc'
 import { Button } from '@/components/ui/button'
 import { formatBytes, secondsToDisplay } from '@/lib/utils'
 import { captions } from '@/lib/strings'
@@ -106,7 +111,9 @@ export default function Prerequisites({ desktop, onReadyChange }: PrerequisitesP
   )
   const [isChecking, setIsChecking] = useState(true)
   const [expanded, setExpanded] = useState(false)
-  const [installProgress, setInstallProgress] = useState<Record<string, PrerequisiteInstallProgress>>({})
+  const [installProgress, setInstallProgress] = useState<
+    Record<string, PrerequisiteInstallProgress>
+  >({})
 
   const refreshPrerequisites = useCallback(async (): Promise<void> => {
     setIsChecking(true)
@@ -154,16 +161,16 @@ export default function Prerequisites({ desktop, onReadyChange }: PrerequisitesP
       }
 
       setItems((prev) =>
-          prev.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  error: result.ok ? null : result.stderr || prerequisitesCaptions.installFailed,
-                  status: 'missing'
-                }
-              : item
-          )
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                error: result.ok ? null : result.stderr || prerequisitesCaptions.installFailed,
+                status: 'missing'
+              }
+            : item
         )
+      )
     },
     [desktop, refreshPrerequisites]
   )
@@ -359,60 +366,67 @@ export default function Prerequisites({ desktop, onReadyChange }: PrerequisitesP
                     <p className="mt-2 text-xs leading-snug text-warning">{item.detail}</p>
                   )}
 
-                  {item.status === 'installing' && (() => {
-                    const prog = installProgress[item.id as PrerequisiteCheckId]
-                    const hasBytes = prog?.totalBytes && prog.totalBytes > 0
-                    const progressPercent = hasBytes
-                      ? Math.min(Math.round(((prog.downloadedBytes ?? 0) / prog.totalBytes!) * 100), 100)
-                      : 0
+                  {item.status === 'installing' &&
+                    (() => {
+                      const prog = installProgress[item.id as PrerequisiteCheckId]
+                      const hasBytes = prog?.totalBytes && prog.totalBytes > 0
+                      const progressPercent = hasBytes
+                        ? Math.min(
+                            Math.round(((prog.downloadedBytes ?? 0) / prog.totalBytes!) * 100),
+                            100
+                          )
+                        : 0
 
-                    return (
-                      <div className="mt-3 space-y-1.5">
-                        {hasBytes ? (
-                          <>
-                            <div className="flex items-center justify-between">
-                              <span className="flex items-center gap-1.5 text-xs text-primary">
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                                {prerequisitesCaptions.actions.installing}
-                              </span>
-                              <span className="text-xs font-mono text-primary">
-                                {formatBytes(prog.downloadedBytes ?? 0)} / {formatBytes(prog.totalBytes!)}
-                              </span>
-                            </div>
-                            <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-primary to-chart-2 rounded-full transition-[width] duration-300"
-                                style={{ width: `${Math.max(progressPercent, (prog.downloadedBytes ?? 0) > 0 ? 4 : 0)}%` }}
-                              />
-                            </div>
-                            {(prog.speedBytesPerSec ?? 0) > 0 && (
+                      return (
+                        <div className="mt-3 space-y-1.5">
+                          {hasBytes ? (
+                            <>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-muted-foreground font-mono">
-                                  {formatBytes(prog.speedBytesPerSec!)}/s
+                                <span className="flex items-center gap-1.5 text-xs text-primary">
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                  {prerequisitesCaptions.actions.installing}
                                 </span>
-                                {(prog.etaSeconds ?? 0) > 0 && (
-                                  <span className="text-xs text-muted-foreground font-mono">
-                                    ETA {secondsToDisplay(prog.etaSeconds!)}
-                                  </span>
-                                )}
+                                <span className="text-xs font-mono text-primary">
+                                  {formatBytes(prog.downloadedBytes ?? 0)} /{' '}
+                                  {formatBytes(prog.totalBytes!)}
+                                </span>
                               </div>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
-                              <div className="h-full bg-primary rounded-full animate-[progress-indeterminate_1.4s_ease-in-out_infinite]" />
-                            </div>
-                            {prog?.line && (
-                              <p className="text-[10px] font-mono text-muted-foreground truncate leading-tight">
-                                {prog.line}
-                              </p>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    )
-                  })()}
+                              <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-primary to-chart-2 rounded-full transition-[width] duration-300"
+                                  style={{
+                                    width: `${Math.max(progressPercent, (prog.downloadedBytes ?? 0) > 0 ? 4 : 0)}%`
+                                  }}
+                                />
+                              </div>
+                              {(prog.speedBytesPerSec ?? 0) > 0 && (
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-muted-foreground font-mono">
+                                    {formatBytes(prog.speedBytesPerSec!)}/s
+                                  </span>
+                                  {(prog.etaSeconds ?? 0) > 0 && (
+                                    <span className="text-xs text-muted-foreground font-mono">
+                                      ETA {secondsToDisplay(prog.etaSeconds!)}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                                <div className="h-full bg-primary rounded-full animate-[progress-indeterminate_1.4s_ease-in-out_infinite]" />
+                              </div>
+                              {prog?.line && (
+                                <p className="text-[10px] font-mono text-muted-foreground truncate leading-tight">
+                                  {prog.line}
+                                </p>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )
+                    })()}
 
                   {(item.status === 'missing' ||
                     item.status === 'attention' ||
