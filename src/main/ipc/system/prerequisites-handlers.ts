@@ -209,6 +209,15 @@ export function resolveFallbackInstallerUrl(
 
 const CUDA_TORCH_INDEX_URL = 'https://download.pytorch.org/whl/cu124'
 
+// torch CUDA is ~2.5 GB; allow up to 2 hours so slow connections can complete.
+// The pip --timeout flag only covers per-connection idle time (60 s), not total
+// download duration — the process-level timeout here is the actual guard.
+const CUDA_INSTALL_TIMEOUT_MS = 2 * 60 * 60 * 1000
+
+// Smaller pip packages (openai-whisper, CPU torch) rarely exceed a few hundred MB;
+// 30 minutes is a comfortable upper bound even on a slow connection.
+const PIP_INSTALL_TIMEOUT_MS = 30 * 60 * 1000
+
 // ---------------------------------------------------------------------------
 // Module-level cache
 // ---------------------------------------------------------------------------
@@ -412,7 +421,27 @@ function normalizePipInstallError(stderr: string): string {
     ].join(' ')
   }
 
-  return stderr
+  // Keep only lines that carry real error information; strip all informational
+  // pip progress/status output so the user sees a concise error message.
+  const informationalPrefixes =
+    /^\s*(WARNING:|Collecting |Downloading |Requirement already satisfied:|Looking in indexes:|Defaulting to user installation|Installing collected packages:|Successfully installed|Preparing metadata|Building wheel|Using cached |Obtaining |Note:|DEPRECATION:)/i
+  const progressBar = /^\s*[-\s]*$/
+  const downloadProgress = /[\d.]+\s*\/\s*[\d.]+ ?(TB|GB|MB|kB|B)/i
+
+  const meaningful = stderr
+    .split(/\r?\n/)
+    .filter(
+      (line) =>
+        line.trim() &&
+        !informationalPrefixes.test(line) &&
+        !progressBar.test(line) &&
+        !downloadProgress.test(line)
+    )
+    .join('\n')
+    .trim()
+
+  // If nothing meaningful remains the caller will surface a generic failure message.
+  return meaningful
 }
 
 // ---------------------------------------------------------------------------
@@ -698,14 +727,14 @@ async function installViaPip(
     '--retries',
     '5',
     '--timeout',
-    '60',
+    '120',
     '--disable-pip-version-check',
     '--no-cache-dir',
     pipPackage
   ]
   const result = onLine
-    ? await runStreamingCommand(python.command, args, onLine)
-    : await runDetailedCommand(python.command, args)
+    ? await runStreamingCommand(python.command, args, onLine, PIP_INSTALL_TIMEOUT_MS)
+    : await runDetailedCommand(python.command, args, PIP_INSTALL_TIMEOUT_MS)
   clearPrerequisiteCache()
 
   return {
@@ -837,7 +866,47 @@ async function installCuda(onLine?: (line: string) => void): Promise<Prerequisit
     return { action: 'opened', id, ok: true }
   }
 
-  // Step 3 – install the CUDA-enabled torch build via pip
+  // Step 2b – upgrade pip first to repair any broken distribution metadata.
+  await runDetailedCommand(
+    python.command,
+    [
+      ...python.prefixArgs,
+      '-m',
+      'pip',
+      'install',
+      '--upgrade',
+      '--quiet',
+      '--disable-pip-version-check',
+      'pip'
+    ],
+    60_000
+  )
+
+  // Step 2c – remove any partially-installed distributions left by a previously
+  // interrupted pip run (e.g. "~ympy" for a broken numpy install). These appear
+  // as tilde-prefixed folders in site-packages and can cause pip to exit with a
+  // non-zero code even when the real packages install successfully.
+  const cleanupCode = [
+    'import pathlib, shutil, site',
+    'dirs = site.getsitepackages()',
+    'try:',
+    '    dirs = dirs + [site.getusersitepackages()]',
+    'except Exception:',
+    '    pass',
+    'for sdir in dirs:',
+    '    try:',
+    '        for p in pathlib.Path(sdir).iterdir():',
+    '            if p.name.startswith("~"):',
+    '                shutil.rmtree(str(p), ignore_errors=True)',
+    '    except Exception:',
+    '        pass'
+  ].join('\n')
+  await runDetailedCommand(python.command, [...python.prefixArgs, '-c', cleanupCode], 15_000)
+
+  // Step 3 – install the CUDA-enabled torch build via pip.
+  // --no-cache-dir is intentionally omitted: pip caches the partial download so
+  // a subsequent retry can resume from where it left off rather than starting
+  // over from 0 bytes.  The torch CUDA wheel is ~2.5 GB so resumability matters.
   const args = [
     ...python.prefixArgs,
     '-m',
@@ -847,9 +916,8 @@ async function installCuda(onLine?: (line: string) => void): Promise<Prerequisit
     '--retries',
     '5',
     '--timeout',
-    '60',
+    '120',
     '--disable-pip-version-check',
-    '--no-cache-dir',
     'torch',
     'torchvision',
     'torchaudio',
@@ -857,16 +925,19 @@ async function installCuda(onLine?: (line: string) => void): Promise<Prerequisit
     CUDA_TORCH_INDEX_URL
   ]
   const result = onLine
-    ? await runStreamingCommand(python.command, args, onLine)
-    : await runDetailedCommand(python.command, args)
+    ? await runStreamingCommand(python.command, args, onLine, CUDA_INSTALL_TIMEOUT_MS)
+    : await runDetailedCommand(python.command, args, CUDA_INSTALL_TIMEOUT_MS)
 
   if (result.exitCode !== 0) {
+    // Combine stdout + stderr so real ERROR: messages from pip are never lost
+    // (pip occasionally writes error details to stdout rather than stderr).
+    const combined = [result.stderr, result.stdout].filter(Boolean).join('\n')
     return {
       action: 'installed',
       command: `${python.command} ${args.join(' ')}`,
       id,
       ok: false,
-      stderr: normalizePipInstallError(result.stderr),
+      stderr: normalizePipInstallError(combined),
       stdout: result.stdout
     }
   }

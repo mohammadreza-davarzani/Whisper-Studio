@@ -153,10 +153,10 @@ export const captions = {
           desc: 'Audio/video extraction and decoding'
         },
         {
-          id: 'cuda',
-          name: 'CUDA Toolkit',
-          required: '11.8+ / 12.x',
-          desc: 'GPU acceleration for transcription'
+          id: 'torch',
+          name: 'PyTorch',
+          required: '2.0+',
+          desc: 'Deep learning runtime for Whisper and GPU support'
         },
         {
           id: 'openai-whisper',
@@ -165,10 +165,10 @@ export const captions = {
           desc: 'OpenAI Whisper transcription library (pip)'
         },
         {
-          id: 'torch',
-          name: 'PyTorch',
-          required: '2.0+',
-          desc: 'Optional - for diarization & VAD'
+          id: 'cuda',
+          name: 'CUDA Toolkit',
+          required: '11.8+ / 12.x',
+          desc: 'GPU acceleration for transcription'
         }
       ]
     },
