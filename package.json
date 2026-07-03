@@ -13,13 +13,14 @@
   "scripts": {
     "dev": "node scripts/electron-vite.mjs dev",
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "prepare-icons": "node scripts/generate-icons.mjs",
     "build": "npm run typecheck && electron-vite build",
     "preview": "node scripts/electron-vite.mjs preview",
-    "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder",
-    "dist:mac": "npm run build && electron-builder --mac",
-    "dist:win": "npm run build && electron-builder --win",
-    "dist:linux": "npm run build && electron-builder --linux",
+    "pack": "npm run prepare-icons && npm run build && electron-builder --dir",
+    "dist": "npm run prepare-icons && npm run build && electron-builder",
+    "dist:mac": "npm run prepare-icons && npm run build && electron-builder --mac",
+    "dist:win": "npm run prepare-icons && npm run build && electron-builder --win",
+    "dist:linux": "npm run prepare-icons && npm run build && electron-builder --linux",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
@@ -55,6 +56,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "prettier": "^3.4.2",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.3.1",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.2",
@@ -74,6 +76,7 @@
       "resources/**/*",
       "package.json"
     ],
+    "icon": "icon.png",
     "asar": true,
     "publish": [
       {
@@ -83,12 +86,14 @@
     ],
     "mac": {
       "category": "public.app-category.productivity",
+      "icon": "icon.icns",
       "target": [
         "dmg",
         "zip"
       ]
     },
     "win": {
+      "icon": "icon.ico",
       "target": [
         "nsis",
         "portable"
@@ -96,6 +101,7 @@
     },
     "linux": {
       "category": "Utility",
+      "icon": "icons",
       "maintainer": "Whisper Studio Contributors <contributors@whisperstudio.dev>",
       "target": [
         "AppImage",
