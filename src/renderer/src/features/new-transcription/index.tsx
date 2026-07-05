@@ -31,7 +31,7 @@ export default function NewTranscription({ desktop }: NewTranscriptionProps) {
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('dashboard')}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -118,7 +118,7 @@ export default function NewTranscription({ desktop }: NewTranscriptionProps) {
         <div className="flex items-center justify-between mt-8 pt-6">
           <Button
             variant="ghost"
-            onClick={() => (step > 1 ? setStep(step - 1) : navigate('/'))}
+            onClick={() => (step > 1 ? setStep(step - 1) : navigate('dashboard'))}
             className="gap-2 text-muted-foreground"
           >
             <ArrowLeft className="w-4 h-4" />

@@ -225,7 +225,7 @@ export default function Studio({ desktop }: StudioProps) {
               ) : !record ? (
                 <div className="text-center py-20 text-muted-foreground text-sm">
                   No transcription selected. Go to the{' '}
-                  <Link to="/dashboard" className="text-primary underline">
+                  <Link to="dashboard" className="text-primary underline">
                     dashboard
                   </Link>{' '}
                   and open one.

@@ -30,7 +30,7 @@ export default function WelcomeHeader() {
           </p>
         </div>
         <div className="hidden sm:flex flex-col items-end gap-3">
-          <Link to="/new">
+          <Link to="new">
             <Button className="gap-2 glow-primary">
               <Plus className="w-4 h-4" />
               {captions.dashboard.welcomeHeader.actions.newTranscription}
