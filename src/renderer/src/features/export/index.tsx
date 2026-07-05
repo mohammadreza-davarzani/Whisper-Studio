@@ -99,7 +99,7 @@ export default function Export({ desktop }: ExportProps) {
       <div className="shrink-0 border-b border-border/50 bg-card/40 backdrop-blur-xl px-6 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/studio">
+            <Link to="studio">
               <button className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors">
                 <ArrowLeft className="w-4 h-4" />
               </button>
@@ -169,7 +169,7 @@ export default function Export({ desktop }: ExportProps) {
         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-muted-foreground">
           <FileAudio className="w-10 h-10 opacity-20" />
           <p className="text-sm">{captions.export.empty.noTranscriptionLoaded}</p>
-          <Link to="/studio">
+          <Link to="studio">
             <Button variant="outline" size="sm">
               <ArrowLeft className="w-3.5 h-3.5 mr-1.5" /> {captions.export.actions.backToStudio}
             </Button>

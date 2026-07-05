@@ -172,7 +172,7 @@ export default function StepSettings({
             </p>
             <button
               type="button"
-              onClick={() => navigate('/models')}
+              onClick={() => navigate('models')}
               className="shrink-0 rounded-md bg-warning/15 px-3 py-1.5 text-[12px] font-medium text-warning hover:bg-warning/20"
             >
               {captions.newTranscription.settings.goToModels}
