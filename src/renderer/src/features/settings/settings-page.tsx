@@ -214,24 +214,6 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
               }
             />
           </SettingRow>
-
-          <SettingRow
-            label="Default Compute"
-            description="Hardware backend for running Whisper."
-            last
-          >
-            <SegmentedControl
-              value={settings.defaultCompute}
-              options={[
-                { label: 'CPU', value: 'cpu' },
-                { label: 'CUDA', value: 'cuda' },
-                { label: 'Auto', value: 'auto' }
-              ]}
-              onChange={(v) =>
-                void updateSettings({ defaultCompute: v as 'cpu' | 'cuda' | 'auto' })
-              }
-            />
-          </SettingRow>
         </SettingsCard>
 
         <SettingsCard icon={<FolderOutput className="h-4 w-4 text-primary" />} title="Output">
