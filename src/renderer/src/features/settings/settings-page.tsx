@@ -256,6 +256,8 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
         <SettingsCard icon={<Database className="h-4 w-4 text-primary" />} title="Storage">
           <SettingRow
             label="Delete All Transcriptions"
+            badge="Danger Zone"
+            badgeClassName="border-destructive/20 bg-destructive/10 text-destructive"
             description="Permanently removes all saved transcription records and output files from disk."
             last
           >
