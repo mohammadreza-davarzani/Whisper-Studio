@@ -4,6 +4,7 @@
 import { PYTHON_TARGET_VERSION } from '../../shared/constants'
 import { execFile } from 'node:child_process'
 import { parseVersion } from './utils'
+import { getVenvPythonPath } from '../paths'
 
 export type CommandResult = {
   command: string
@@ -20,6 +21,13 @@ export type CommandCandidate = {
 
 // supported interpreter is used even when a newer, unsupported Python is also on PATH.
 export async function findPython(): Promise<CommandResult | null> {
+  // Prefer the app-managed venv Python — it is isolated from system packages.
+  const venvPythonPath = getVenvPythonPath()
+  const venvOutput = await runCommand(venvPythonPath, ['--version'], 1500)
+  if (venvOutput && parseVersion(venvOutput)) {
+    return { command: venvPythonPath, output: venvOutput, prefixArgs: [] }
+  }
+
   const candidates = [
     { command: `python${PYTHON_TARGET_VERSION}`, args: ['--version'], timeoutMs: 1500 },
     {
