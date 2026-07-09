@@ -17,6 +17,7 @@ import {
   runCommandCandidate
 } from '../command'
 import { compareVersions, parseVersion, stripAnsi } from '../utils'
+import { getVenvPath, getVenvPythonPath } from '../../paths'
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -434,7 +435,23 @@ async function checkPython(): Promise<{ check: PrerequisiteCheck; python: Comman
     }
   }
 
-  return { check: checkVersion('python', installed, [3, 8]), python }
+  const check = checkVersion('python', installed, [3, 8])
+
+  // Once a valid system Python is confirmed, ensure the app-managed venv exists.
+  // If the returned python is NOT already the venv Python (i.e. venv doesn't exist
+  // yet), create the venv now and re-resolve so all subsequent checks run inside it.
+  if (check.status === 'ok' && python && python.command !== getVenvPythonPath()) {
+    await runDetailedCommand(
+      python.command,
+      [...python.prefixArgs, '-m', 'venv', getVenvPath()],
+      60_000
+    )
+    // findPython() will now return the venv Python on its first candidate check.
+    const venvPython = await findPython()
+    return { check, python: venvPython ?? python }
+  }
+
+  return { check, python }
 }
 
 async function checkCommandVersion(

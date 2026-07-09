@@ -94,7 +94,16 @@ export function usePrerequisites(desktop: AppApi) {
   }, [desktop])
 
   // Unsupported items (e.g. CUDA on macOS) are excluded from the visible grid.
-  const visibleItems = items.filter((item) => item.status !== 'unsupported')
+  // When CUDA is detected (ok or attention) the CUDA installer manages torch;
+  // showing a separate plain-CPU torch card would be confusing and misleading.
+  const cudaItem = items.find((item) => item.id === 'cuda')
+  const cudaSupported =
+    cudaItem?.status === 'ok' ||
+    cudaItem?.status === 'attention' ||
+    cudaItem?.status === 'installing'
+  const visibleItems = items.filter(
+    (item) => item.status !== 'unsupported' && !(item.id === 'torch' && cudaSupported)
+  )
   const installedCount = visibleItems.filter((p) => p.status === 'ok').length
   const isInstalling = items.some((item) => item.status === 'installing')
   const isBusy = isChecking || isInstalling

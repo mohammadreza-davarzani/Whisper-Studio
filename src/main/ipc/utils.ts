@@ -1,8 +1,14 @@
+import { delimiter } from 'node:path'
 import { WHISPER_LANGUAGE_CODES } from '../../shared/constants'
+import { getVenvBinPath } from '../paths'
 
 export function getPythonEnv(): NodeJS.ProcessEnv {
+  // Prepend the venv's bin/Scripts directory so child processes (including the
+  // `whisper` CLI script) resolve to the app-managed venv, not the system PATH.
+  const PATH = getVenvBinPath() + delimiter + (process.env.PATH ?? '')
   return {
     ...process.env,
+    PATH,
     PYTHONIOENCODING: 'utf-8',
     PYTHONUNBUFFERED: '1',
     PYTHONUTF8: '1'
