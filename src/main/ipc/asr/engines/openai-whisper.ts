@@ -6,7 +6,7 @@ import type { WhisperTranscriptionRequest } from '../../../../shared/ipc'
 import { TranscriptionError } from '../../../../shared/errors'
 import { type Result, err, ok } from '../../../../shared/types'
 import { parseWhisperJson } from '../../../parser'
-import { getOutputDirectory } from '../../../paths'
+import { getOutputDirectory, getVenvBinPath } from '../../../paths'
 import { readSettings } from '../../system/settings-handlers'
 import type {
   TranscriptionEngine,
@@ -70,12 +70,16 @@ async function runOpenAiWhisper(
   await mkdir(outputDirectory, { recursive: true })
 
   const args = buildArgs(request, outputDirectory)
-  const command = `whisper ${args.join(' ')}`
+  const whisperBin = join(
+    getVenvBinPath(),
+    process.platform === 'win32' ? 'whisper.exe' : 'whisper'
+  )
+  const command = `${whisperBin} ${args.join(' ')}`
 
   emitProgress({ phase: 'sending-command', state: 'complete', message: command })
 
   return new Promise<Result<TranscriptionEngineResult, TranscriptionError>>((resolve) => {
-    const child = spawn('whisper', args, {
+    const child = spawn(whisperBin, args, {
       cwd: dirname(request.filePath),
       env: getPythonEnv(),
       windowsHide: true
