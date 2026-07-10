@@ -13,6 +13,9 @@
 	<span>complete with apps for macOS, Windows, Linux</span>
 </p>
 
+<p aligh="center" >
+[![GitHub All Releases](https://img.shields.io/github/downloads/mohammadKarimi/Whisper-Studio/total.svg)](https://github.com/mohammadKarimi/Whisper-Studio/releases)
+</p>
 <img alt="image 36" src="/screenshots/first.png" />
 <img  alt="Screenshot 2026-06-29 191632" src="/screenshots/second.png" />
 <img width="3840" height="2280" alt="image 38" src="/screenshots/fifth.png" />
