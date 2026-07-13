@@ -9,7 +9,7 @@
 <h1 align="center">Whisper Studio</h1>
 
 <p align="center">
-  <strong>Whisper Studio is an independent desktop interface for OpenAI Whisper.</strong><br/>
+  <strong>Whisper Studio is an independent desktop interface for WhisperX and faster-whisper.</strong><br/>
 	<span>complete with apps for macOS, Windows, Linux</span>
 </p>
 
