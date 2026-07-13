@@ -37,12 +37,12 @@ export const prerequisiteIds: readonly PrerequisiteCheckId[] = [
   'python',
   'ffmpeg',
   'cuda',
-  'openai-whisper',
+  'whisperx',
   'torch'
 ]
 
 const pipInstallPackages: Partial<Record<PrerequisiteCheckId, string>> = {
-  'openai-whisper': 'openai-whisper',
+  'whisperx': 'whisperx',
   torch: 'torch'
 }
 
@@ -208,14 +208,37 @@ export function resolveFallbackInstallerUrl(
   return platformUrl ?? installerUrls[id] ?? null
 }
 
-const CUDA_TORCH_INDEX_URL = 'https://download.pytorch.org/whl/cu124'
+// Maps a detected CUDA version string to the most suitable PyTorch wheel index.
+// NVIDIA guarantees backward compatibility: a driver that supports CUDA 13.x will
+// also run binaries built for older versions (12.8, 12.4, …).  We therefore map
+// to the *newest* index whose CUDA major.minor ≤ the installed version, which
+// maximises the chance of finding the latest PyTorch build.
+// Update this map when PyTorch adds support for a new CUDA release.
+const CUDA_TORCH_INDEX_URLS: [minMajor: number, minMinor: number, url: string][] = [
+  [12, 8, 'https://download.pytorch.org/whl/cu128'],
+  [12, 4, 'https://download.pytorch.org/whl/cu124'],
+  [12, 1, 'https://download.pytorch.org/whl/cu121'],
+  [11, 8, 'https://download.pytorch.org/whl/cu118']
+]
+const CUDA_TORCH_INDEX_URL_FALLBACK = 'https://download.pytorch.org/whl/cu128'
+
+function getCudaTorchIndexUrl(cudaVersion: string | null): string {
+  if (!cudaVersion) return CUDA_TORCH_INDEX_URL_FALLBACK
+  const parts = cudaVersion.split('.').map(Number)
+  const major = parts[0] ?? 0
+  const minor = parts[1] ?? 0
+  for (const [minMajor, minMinor, url] of CUDA_TORCH_INDEX_URLS) {
+    if (major > minMajor || (major === minMajor && minor >= minMinor)) return url
+  }
+  return CUDA_TORCH_INDEX_URL_FALLBACK
+}
 
 // torch CUDA is ~2.5 GB; allow up to 2 hours so slow connections can complete.
 // The pip --timeout flag only covers per-connection idle time (60 s), not total
 // download duration — the process-level timeout here is the actual guard.
 const CUDA_INSTALL_TIMEOUT_MS = 2 * 60 * 60 * 1000
 
-// Smaller pip packages (openai-whisper, CPU torch) rarely exceed a few hundred MB;
+// Smaller pip packages (whisperx, CPU torch) rarely exceed a few hundred MB;
 // 30 minutes is a comfortable upper bound even on a slow connection.
 const PIP_INSTALL_TIMEOUT_MS = 30 * 60 * 1000
 
@@ -471,7 +494,7 @@ async function checkPythonPackages(python: CommandResult | null): Promise<Prereq
     minimum?: readonly number[]
     packageName: string
   }[] = [
-    { id: 'openai-whisper', packageName: 'openai-whisper' },
+    { id: 'whisperx', packageName: 'whisperx' },
     { id: 'torch', packageName: 'torch', minimum: [2, 0] }
   ]
 
@@ -613,11 +636,6 @@ function parsePipProgressLine(
   PrerequisiteInstallProgress,
   'downloadedBytes' | 'totalBytes' | 'speedBytesPerSec' | 'etaSeconds'
 > | null {
-  const match = line.match(
-    /([\d.]+)\s*\/\s*([\d.]+)\s*(TB|GB|MB|kB|B)\s+([\d.]+)\s*(TB|GB|MB|kB|B)\/s\s+eta\s+([\d:]+)/i
-  )
-  if (!match) return null
-
   const toBytes = (value: number, unit: string): number => {
     switch (unit.toLowerCase()) {
       case 'tb':
@@ -633,20 +651,43 @@ function parsePipProgressLine(
     }
   }
 
-  const etaParts = (match[6] ?? '0').split(':').map(Number)
-  const etaSeconds =
-    etaParts.length === 3
-      ? (etaParts[0] ?? 0) * 3600 + (etaParts[1] ?? 0) * 60 + (etaParts[2] ?? 0)
-      : etaParts.length === 2
-        ? (etaParts[0] ?? 0) * 60 + (etaParts[1] ?? 0)
-        : (etaParts[0] ?? 0)
+  // Real-time / completion progress line emitted by pip:
+  //   "18.7/18.7 MB 3.4 MB/s eta 0:00:00"
+  const progressMatch = line.match(
+    /([\d.]+)\s*\/\s*([\d.]+)\s*(TB|GB|MB|kB|B)\s+([\d.]+)\s*(TB|GB|MB|kB|B)\/s\s+eta\s+([\d:]+)/i
+  )
+  if (progressMatch) {
+    const etaParts = (progressMatch[6] ?? '0').split(':').map(Number)
+    const etaSeconds =
+      etaParts.length === 3
+        ? (etaParts[0] ?? 0) * 3600 + (etaParts[1] ?? 0) * 60 + (etaParts[2] ?? 0)
+        : etaParts.length === 2
+          ? (etaParts[0] ?? 0) * 60 + (etaParts[1] ?? 0)
+          : (etaParts[0] ?? 0)
 
-  return {
-    downloadedBytes: toBytes(parseFloat(match[1] ?? '0'), match[3] ?? 'B'),
-    totalBytes: toBytes(parseFloat(match[2] ?? '0'), match[3] ?? 'B'),
-    speedBytesPerSec: toBytes(parseFloat(match[4] ?? '0'), match[5] ?? 'B'),
-    etaSeconds
+    return {
+      downloadedBytes: toBytes(parseFloat(progressMatch[1] ?? '0'), progressMatch[3] ?? 'B'),
+      totalBytes: toBytes(parseFloat(progressMatch[2] ?? '0'), progressMatch[3] ?? 'B'),
+      speedBytesPerSec: toBytes(parseFloat(progressMatch[4] ?? '0'), progressMatch[5] ?? 'B'),
+      etaSeconds
+    }
   }
+
+  // Download header line emitted when pip starts fetching a file (non-TTY mode):
+  //   "  Downloading faster_whisper-1.1.1-py3-none-any.whl (18.7 MB)"
+  // Expose the total size so the UI can show what is being downloaded before
+  // the completion line arrives.
+  const headerMatch = line.match(
+    /^\s*Downloading\s+\S+\s+\((\d+\.?\d*)\s*(TB|GB|MB|kB|B)\)/i
+  )
+  if (headerMatch) {
+    return {
+      downloadedBytes: 0,
+      totalBytes: toBytes(parseFloat(headerMatch[1] ?? '0'), headerMatch[2] ?? 'B')
+    }
+  }
+
+  return null
 }
 
 // Runs all prerequisite checks in parallel and merges results in display order.
@@ -681,7 +722,8 @@ async function checkPrerequisites(): Promise<PrerequisiteCheck[]> {
 async function installViaPip(
   id: PrerequisiteCheckId,
   pipPackage: string,
-  onLine?: (line: string) => void
+  onLine?: (line: string) => void,
+  extraArgs: readonly string[] = []
 ): Promise<PrerequisiteInstallResult> {
   const python = await findPython()
 
@@ -717,7 +759,8 @@ async function installViaPip(
     '120',
     '--disable-pip-version-check',
     '--no-cache-dir',
-    pipPackage
+    pipPackage,
+    ...extraArgs
   ]
   const result = onLine
     ? await runStreamingCommand(python.command, args, onLine, PIP_INSTALL_TIMEOUT_MS)
@@ -732,6 +775,20 @@ async function installViaPip(
     stderr: normalizePipInstallError(result.stderr),
     stdout: result.stdout
   }
+}
+
+// Installs whisperx. When a CUDA toolkit is detected on the system, adds the
+// PyTorch CUDA index URL so that pip resolves the CUDA-enabled torch build
+// instead of the default CPU-only wheel — preventing torch from being silently
+// downgraded after whisperx's dependency resolver runs.
+async function installWhisperX(
+  onLine?: (line: string) => void
+): Promise<PrerequisiteInstallResult> {
+  const toolkit = await detectCudaToolkit()
+  const extraArgs: string[] = toolkit
+    ? ['--extra-index-url', getCudaTorchIndexUrl(toolkit.version)]
+    : []
+  return installViaPip('whisperx', pipInstallPackages['whisperx'] as string, onLine, extraArgs)
 }
 
 async function installViaUrl(
@@ -894,6 +951,8 @@ async function installCuda(onLine?: (line: string) => void): Promise<Prerequisit
   // --no-cache-dir is intentionally omitted: pip caches the partial download so
   // a subsequent retry can resume from where it left off rather than starting
   // over from 0 bytes.  The torch CUDA wheel is ~2.5 GB so resumability matters.
+  const toolkit = await detectCudaToolkit()
+  const cudaIndexUrl = getCudaTorchIndexUrl(toolkit?.version ?? null)
   const args = [
     ...python.prefixArgs,
     '-m',
@@ -909,7 +968,7 @@ async function installCuda(onLine?: (line: string) => void): Promise<Prerequisit
     'torchvision',
     'torchaudio',
     '--index-url',
-    CUDA_TORCH_INDEX_URL
+    cudaIndexUrl
   ]
   const result = onLine
     ? await runStreamingCommand(python.command, args, onLine, CUDA_INSTALL_TIMEOUT_MS)
@@ -953,8 +1012,7 @@ const INSTALLERS: Record<PrerequisiteCheckId, Installer> = {
   python: (onLine) => installSystemPrerequisite('python', onLine),
   ffmpeg: (onLine) => installSystemPrerequisite('ffmpeg', onLine),
   cuda: (onLine) => installCuda(onLine),
-  'openai-whisper': (onLine) =>
-    installViaPip('openai-whisper', pipInstallPackages['openai-whisper'] as string, onLine),
+  'whisperx': (onLine) => installWhisperX(onLine),
   torch: (onLine) => installViaPip('torch', pipInstallPackages.torch as string, onLine)
 }
 
