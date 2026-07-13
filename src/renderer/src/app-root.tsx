@@ -3,6 +3,7 @@ import { AppRouteView } from './app/app-route-view'
 import { useAppRoute } from './app/use-app-route'
 import { useDesktopShell } from './app/use-desktop-shell'
 import { AppSidebar } from './components/app-sidebar'
+import { SplashScreen } from './components/splash-screen'
 import { SystemStatusBar } from './components/system-status-bar'
 import { TitleBar } from './components/title-bar'
 import { captions } from './lib/strings'
@@ -55,11 +56,14 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 // ---------------------------------------------------------------------------
 
 export function App(): JSX.Element {
-  const { appInfo, desktop, isWindowMaximized, platform, systemStatus } = useDesktopShell()
+  const { appInfo, desktop, isShellReady, isWindowMaximized, platform, systemStatus } =
+    useDesktopShell()
   const { activeRoute, navigateTo } = useAppRoute()
 
   return (
     <div className="grid h-screen min-h-0 w-screen grid-rows-[2.375rem_minmax(0,1fr)_1.75rem] overflow-hidden bg-background text-foreground">
+      <SplashScreen ready={isShellReady} version={appInfo?.version} />
+
       <TitleBar
         appName={appInfo?.name ?? captions.app.defaultName}
         isMaximized={isWindowMaximized}
@@ -80,7 +84,7 @@ export function App(): JSX.Element {
         </main>
       </div>
 
-      <SystemStatusBar status={systemStatus} />
+      <SystemStatusBar appVersion={appInfo?.version} status={systemStatus} />
     </div>
   )
 }

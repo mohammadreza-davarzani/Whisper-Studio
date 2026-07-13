@@ -36,6 +36,7 @@ import { DeleteAllConfirmModal } from './components/delete-all-confirm-modal'
 import { SettingsCard } from './components/settings-card'
 import { SettingRow } from './components/setting-row'
 import { useSettings } from './use-settings'
+import flagUrl from '../../../../../resources/National_flag_of_Iran.svg'
 
 const EXPORT_FORMATS = ['srt', 'vtt', 'txt', 'tsv'] as const
 
@@ -310,8 +311,9 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
 
         {/* ── Footer ──────────────────────────────────────────────────── */}
         <p className="flex items-center justify-center gap-1.5 pb-2 text-xs text-muted-foreground/50">
-          Built with <Heart className="h-3 w-3 fill-destructive text-destructive" /> by the Whisper
-          Studio team · © {new Date().getFullYear()}
+          Built with <Heart className="h-3 w-3 fill-destructive text-destructive" /> under the same
+          sky.
+          <img src={flagUrl} className="h-3 w-3" alt="" />
         </p>
       </div>
       <DeleteAllConfirmModal

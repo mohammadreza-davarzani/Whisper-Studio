@@ -47,7 +47,6 @@ export interface SystemStatusMetric {
 }
 
 export interface SystemStatus {
-  activity: string
   metrics: readonly SystemStatusMetric[]
   ready: boolean
   status: string

@@ -70,7 +70,7 @@ function createMainWindow(): BrowserWindow {
     icon: getWindowIcon(),
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
     trafficLightPosition: { x: 16, y: 14 },
-    backgroundColor: '#18191f',
+    backgroundColor: '#0d0e12',
     show: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),

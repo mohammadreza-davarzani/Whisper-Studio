@@ -8,8 +8,149 @@
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Whisper Studio</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        background: #0d0e12;
+      }
+
+      html,
+      body,
+      #root {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        overflow: hidden;
+        background: #0d0e12;
+        color: #f0f2f5;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+      }
+
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background:
+          linear-gradient(115deg, rgba(42, 143, 244, 0.14), transparent 34%),
+          linear-gradient(245deg, rgba(45, 210, 183, 0.12), transparent 36%),
+          repeating-linear-gradient(90deg, rgba(240, 242, 245, 0.06) 0 1px, transparent 1px 72px),
+          repeating-linear-gradient(0deg, rgba(240, 242, 245, 0.05) 0 1px, transparent 1px 72px),
+          #0d0e12;
+      }
+
+      .boot-splash-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 28px;
+        padding: 32px;
+        text-align: center;
+      }
+
+      .boot-splash-logo {
+        position: relative;
+        display: grid;
+        width: 96px;
+        height: 96px;
+        place-items: center;
+        border: 1px solid rgba(42, 143, 244, 0.25);
+        border-radius: 32px;
+        background: rgba(17, 19, 24, 0.7);
+        box-shadow: 0 24px 80px rgba(42, 143, 244, 0.15);
+        backdrop-filter: blur(18px);
+      }
+
+      .boot-splash-logo svg {
+        width: 64px;
+        height: 64px;
+        filter: drop-shadow(0 0 22px rgba(42, 143, 244, 0.35));
+      }
+
+      .boot-splash-title {
+        margin: 0 0 8px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .boot-splash-copy {
+        margin: 0;
+        color: #707d8f;
+        font-size: 12px;
+      }
+
+      .boot-splash-bar {
+        width: 224px;
+        height: 4px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #1f2229;
+      }
+
+      .boot-splash-bar span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #2a8ff4, #2dd2b7, #f5a83d);
+        animation: boot-splash-progress 1.3s ease-in-out infinite;
+      }
+
+      @keyframes boot-splash-progress {
+        0% {
+          width: 0%;
+          margin-left: 0%;
+        }
+
+        48% {
+          width: 72%;
+          margin-left: 14%;
+        }
+
+        100% {
+          width: 0%;
+          margin-left: 100%;
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="boot-splash" aria-live="polite" aria-busy="true">
+      <div class="boot-splash-content">
+        <div class="boot-splash-logo" aria-hidden="true">
+          <svg viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M16.0745 199.819L101.091 852.487C101.744 857.499 106.882 860.607 111.625 858.86L403.665 751.266C406.762 750.125 408.819 747.175 408.819 743.875L408.819 170.49C408.819 165.907 404.922 162.292 400.352 162.636L23.2951 190.947C18.789 191.285 15.4908 195.338 16.0745 199.819Z"
+              fill="#41ABF2"
+            />
+            <path
+              d="M776.602 741.541L465.369 858.759C459.924 860.81 454.108 856.786 454.108 850.967L454.108 248.018C454.108 243.42 457.836 239.693 462.434 239.693H648.765C652.565 239.693 655.883 242.265 656.829 245.945L781.731 731.676C782.79 735.792 780.579 740.044 776.602 741.541Z"
+              fill="#41ABF2"
+            />
+            <path
+              d="M831.818 729.013L996.775 690.449C1002.31 689.155 1004.95 682.819 1001.97 677.979L855.039 439.158C852.63 435.242 847.502 434.02 843.585 436.43L762.809 486.127C759.654 488.068 758.161 491.859 759.145 495.43L821.896 723.118C823.084 727.428 827.465 730.031 831.818 729.013Z"
+              fill="#41ABF2"
+            />
+          </svg>
+        </div>
+        <div>
+          <h1 class="boot-splash-title">Whisper Studio</h1>
+          <p class="boot-splash-copy">Starting local workspace</p>
+        </div>
+        <div class="boot-splash-bar"><span></span></div>
+      </div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

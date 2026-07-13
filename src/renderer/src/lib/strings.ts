@@ -38,7 +38,6 @@ export const captions = {
   statusBar: {
     label: 'System status',
     ready: 'System Ready',
-    idle: 'Idle',
     metrics: [
       { label: 'CPU', value: 'Unknown' },
       { label: 'GPU', value: 'Unknown' },

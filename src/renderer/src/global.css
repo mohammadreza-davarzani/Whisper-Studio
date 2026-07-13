@@ -140,6 +140,21 @@
   }
 }
 
+@keyframes splash-progress {
+  0% {
+    width: 0%;
+    margin-left: 0%;
+  }
+  48% {
+    width: 72%;
+    margin-left: 14%;
+  }
+  100% {
+    width: 0%;
+    margin-left: 100%;
+  }
+}
+
 @layer components {
   .glass-panel {
     @apply border border-border/60 bg-card/70 shadow-sm backdrop-blur;
@@ -161,6 +176,31 @@
     box-shadow:
       0 0 24px color-mix(in oklab, var(--primary) 26%, transparent),
       0 0 2px color-mix(in oklab, var(--primary) 45%, transparent);
+  }
+
+  .splash-background {
+    background:
+      linear-gradient(
+        115deg,
+        color-mix(in oklab, var(--primary) 24%, transparent),
+        transparent 34%
+      ),
+      linear-gradient(
+        245deg,
+        color-mix(in oklab, var(--chart-2) 12%, transparent),
+        transparent 36%
+      ),
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in oklab, var(--foreground) 2%, transparent) 0 1px,
+        transparent 1px 72px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        color-mix(in oklab, var(--foreground) 2%, transparent) 0 1px,
+        transparent 1px 72px
+      ),
+      var(--background);
   }
 }
 

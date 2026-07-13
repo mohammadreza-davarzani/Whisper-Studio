@@ -36,7 +36,6 @@ const browserDesktopApi: DesktopApi = {
   getSystemStatus: async (): Promise<SystemStatus> => ({
     ready: true,
     status: 'System Ready',
-    activity: 'Idle',
     metrics: [
       {
         label: 'CPU',

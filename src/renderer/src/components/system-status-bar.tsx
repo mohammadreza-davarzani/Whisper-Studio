@@ -10,14 +10,14 @@ const metricIconByLabel: Record<string, typeof Circle> = {
 }
 
 interface SystemStatusBarProps {
+  appVersion?: string | null
   status: SystemStatus | null
 }
 
-export function SystemStatusBar({ status }: SystemStatusBarProps): JSX.Element {
+export function SystemStatusBar({ appVersion, status }: SystemStatusBarProps): JSX.Element {
   const displayStatus: SystemStatus = status ?? {
     ready: true,
     status: captions.statusBar.ready,
-    activity: captions.statusBar.idle,
     metrics: captions.statusBar.metrics
   }
   const visibleMetrics = displayStatus.metrics.filter((metric) => {
@@ -42,7 +42,7 @@ export function SystemStatusBar({ status }: SystemStatusBarProps): JSX.Element {
           {displayStatus.status}
         </span>
         <Dot className="size-4 shrink-0 text-sidebar-foreground/40 -mx-1" />
-        <span className="font-mono text-sidebar-foreground">{displayStatus.activity}</span>
+        <span className="font-mono text-sidebar-foreground">v{appVersion}</span>
       </div>
 
       <div className="flex min-w-0 items-center justify-end gap-3 overflow-hidden">

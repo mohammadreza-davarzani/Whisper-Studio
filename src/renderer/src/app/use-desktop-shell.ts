@@ -6,6 +6,7 @@ interface DesktopShellState {
   appInfo: AppInfo | null
   desktop: DesktopApi
   isWindowMaximized: boolean
+  isShellReady: boolean
   platform: DesktopPlatform
   systemStatus: SystemStatus | null
 }
@@ -16,20 +17,43 @@ export function useDesktopShell(): DesktopShellState {
   const [platform, setPlatform] = useState<DesktopPlatform>('win32')
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null)
+  const [isShellReady, setIsShellReady] = useState(false)
 
   useEffect(() => {
-    void desktop.getPlatform().then(setPlatform)
-    void desktop.getAppInfo().then(setAppInfo)
-    void desktop.getSystemStatus().then(setSystemStatus)
-    void desktop.windowControls.isMaximized().then(setIsWindowMaximized)
+    let mounted = true
 
-    return desktop.windowControls.onStateChange(setIsWindowMaximized)
+    const loadShellState = async (): Promise<void> => {
+      const [platformResult, appInfoResult, systemStatusResult, isMaximizedResult] =
+        await Promise.allSettled([
+          desktop.getPlatform(),
+          desktop.getAppInfo(),
+          desktop.getSystemStatus(),
+          desktop.windowControls.isMaximized()
+        ])
+
+      if (!mounted) return
+
+      if (platformResult.status === 'fulfilled') setPlatform(platformResult.value)
+      if (appInfoResult.status === 'fulfilled') setAppInfo(appInfoResult.value)
+      if (systemStatusResult.status === 'fulfilled') setSystemStatus(systemStatusResult.value)
+      if (isMaximizedResult.status === 'fulfilled') setIsWindowMaximized(isMaximizedResult.value)
+      setIsShellReady(true)
+    }
+
+    void loadShellState()
+    const unsubscribe = desktop.windowControls.onStateChange(setIsWindowMaximized)
+
+    return () => {
+      mounted = false
+      unsubscribe()
+    }
   }, [desktop])
 
   return {
     appInfo,
     desktop,
     isWindowMaximized,
+    isShellReady,
     platform,
     systemStatus
   }
