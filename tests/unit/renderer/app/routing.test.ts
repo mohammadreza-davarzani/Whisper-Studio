@@ -7,7 +7,15 @@ import {
   type AppRouteId
 } from '@/app/routing'
 
-const ALL_ROUTES: AppRouteId[] = ['dashboard', 'new', 'studio', 'settings', 'export', 'models']
+const ALL_ROUTES: AppRouteId[] = [
+  'dashboard',
+  'new',
+  'studio',
+  'settings',
+  'export',
+  'models',
+  'requirements'
+]
 
 describe('getRouteFromPath()', () => {
   it('resolves "/" to dashboard', () => {
@@ -20,6 +28,7 @@ describe('getRouteFromPath()', () => {
     expect(getRouteFromPath('/settings')).toBe('settings')
     expect(getRouteFromPath('/export')).toBe('export')
     expect(getRouteFromPath('/models')).toBe('models')
+    expect(getRouteFromPath('/requirements')).toBe('requirements')
   })
 
   it('falls back to dashboard for unknown paths', () => {
@@ -68,6 +77,7 @@ describe('getRoutePath()', () => {
     expect(getRoutePath('settings')).toBe('/settings')
     expect(getRoutePath('export')).toBe('/export')
     expect(getRoutePath('models')).toBe('/models')
+    expect(getRoutePath('requirements')).toBe('/requirements')
   })
 
   it('round-trips with getRouteFromPath for all routes', () => {

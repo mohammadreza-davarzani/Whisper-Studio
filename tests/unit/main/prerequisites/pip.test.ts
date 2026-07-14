@@ -1,5 +1,32 @@
 import { describe, expect, it } from 'vitest'
-import { normalizePipInstallError, parsePipProgressLine } from '@main/prerequisites/pip'
+import {
+  createPipPackageProgressTracker,
+  normalizePipInstallError,
+  parsePipProgressLine
+} from '@main/prerequisites/pip'
+
+describe('createPipPackageProgressTracker()', () => {
+  it('counts unique discovered packages and download artifacts', () => {
+    const track = createPipPackageProgressTracker()
+
+    expect(track('Collecting torch>=2.0')).toEqual({
+      downloadsStarted: 0,
+      packagesDiscovered: 1
+    })
+    expect(track('Collecting faster_whisper')).toEqual({
+      downloadsStarted: 0,
+      packagesDiscovered: 2
+    })
+    expect(track('Downloading https://files.example/torch-2.0.whl.metadata (30 kB)')).toEqual({
+      downloadsStarted: 1,
+      packagesDiscovered: 2
+    })
+    expect(track('Downloading https://files.example/torch-2.0.whl (2.5 GB)')).toEqual({
+      downloadsStarted: 1,
+      packagesDiscovered: 2
+    })
+  })
+})
 
 describe('parsePipProgressLine()', () => {
   it('parses completed pip download progress lines', () => {
