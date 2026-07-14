@@ -1,6 +1,21 @@
-export type AppRouteId = 'dashboard' | 'new' | 'studio' | 'settings' | 'export' | 'models'
+export type AppRouteId =
+  | 'dashboard'
+  | 'new'
+  | 'studio'
+  | 'settings'
+  | 'export'
+  | 'models'
+  | 'requirements'
 
-const routeIds: AppRouteId[] = ['dashboard', 'new', 'studio', 'settings', 'export', 'models']
+const routeIds: AppRouteId[] = [
+  'dashboard',
+  'new',
+  'studio',
+  'settings',
+  'export',
+  'models',
+  'requirements'
+]
 
 const routePaths: Record<AppRouteId, string> = {
   dashboard: '/',
@@ -8,7 +23,8 @@ const routePaths: Record<AppRouteId, string> = {
   studio: '/studio',
   settings: '/settings',
   export: '/export',
-  models: '/models'
+  models: '/models',
+  requirements: '/requirements'
 }
 
 const pathRoutes = new Map<string, AppRouteId>(
