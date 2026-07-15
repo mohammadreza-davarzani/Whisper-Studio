@@ -1,11 +1,13 @@
-import { delimiter } from 'node:path'
+import { delimiter, dirname, join } from 'node:path'
 import { WHISPER_LANGUAGE_CODES } from '../../shared/constants'
-import { getVenvBinPath } from '../paths'
+import { getRuntimeBinPath } from '../runtime/paths'
+import { getRuntimePythonPath } from '../runtime/paths'
 
-export function getPythonEnv(): NodeJS.ProcessEnv {
-  // Prepend the venv's bin/Scripts directory so child processes (including the
-  // `whisper` CLI script) resolve to the app-managed venv, not the system PATH.
-  const PATH = getVenvBinPath() + delimiter + (process.env.PATH ?? '')
+export function getPythonEnv(runtimeRoot: string): NodeJS.ProcessEnv {
+  const runtimeBin = getRuntimeBinPath(runtimeRoot)
+  const ffmpegBin = join(runtimeRoot, 'ffmpeg')
+  const pythonHome = dirname(getRuntimePythonPath(runtimeRoot))
+  const PATH = [runtimeBin, pythonHome, ffmpegBin, process.env.PATH ?? ''].join(delimiter)
   return {
     ...process.env,
     PATH,

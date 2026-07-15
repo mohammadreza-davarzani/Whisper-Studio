@@ -12,7 +12,8 @@ export function getAppInfo(): AppInfo {
     version: app.getVersion(),
     electron: process.versions.electron,
     chrome: process.versions.chrome,
-    node: process.versions.node
+    node: process.versions.node,
+    userDataPath: app.getPath('userData')
   }
 }
 

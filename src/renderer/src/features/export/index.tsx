@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { DesktopApi } from '@shared/ipc'
-import { useStudioContext } from '@/lib/studio-context'
+import { useStudioContext } from '@/app/studio-context'
 import {
   generate,
   type ExportFormat,

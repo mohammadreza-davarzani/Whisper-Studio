@@ -13,6 +13,7 @@ export const captions = {
     close: 'Close'
   },
   sidebar: {
+    workspace: 'Workspace',
     searchPlaceholder: 'Search…',
     settings: 'Settings',
     reportBug: 'Report a Bug',
@@ -26,12 +27,15 @@ export const captions = {
     },
     sections: [
       {
-        title: 'Workspace',
+        title: '',
         items: [
-          { label: 'Your Workspace', routeId: 'dashboard' },
-          { label: 'New Transcription', routeId: 'new' },
-          { label: 'Whisper Models', routeId: 'models' }
+          { label: 'Your Transcriptions', routeId: 'dashboard' },
+          { label: 'New Transcription', routeId: 'new' }
         ]
+      },
+      {
+        title: 'Models',
+        items: [{ label: 'Whisper Models', routeId: 'models' }]
       }
     ]
   },
@@ -95,6 +99,80 @@ export const captions = {
   settingsPage: {
     title: 'Settings'
   },
+  runtimeSetup: {
+    eyebrow: 'Whisper Runtime',
+    title: 'Set up the transcription engine',
+    description:
+      'Whisper Studio downloads a private, versioned Runtime containing Python, WhisperX, PyTorch, FFmpeg and every required library. It does not modify your system Python.',
+    features: [
+      { title: 'Isolated', detail: 'No global packages' },
+      { title: 'Optimized', detail: 'CPU or NVIDIA GPU' },
+      { title: 'Verified', detail: 'Checksum and health check' }
+    ],
+    package: {
+      title: 'Runtime package',
+      subtitle: 'Automatically selected for this computer',
+      unavailable:
+        'No compatible Runtime is published yet. Add artifacts to the hosted runtime manifest.'
+    },
+    artifacts: {
+      cpu: 'CPU Runtime',
+      cuda: 'NVIDIA GPU Runtime',
+      recommended: ' (Recommended)'
+    },
+    phases: {
+      preparing: 'Preparing',
+      downloading: 'Downloading',
+      verifying: 'Verifying download',
+      extracting: 'Extracting files',
+      checking: 'Checking Runtime',
+      ready: 'Ready',
+      error: 'Installation failed'
+    },
+    progress: {
+      left: 'left'
+    },
+    actions: {
+      install: 'Download and install Runtime',
+      installing: 'Installing Runtime',
+      retry: 'Retry Download'
+    },
+    errors: {
+      installFailed: 'Runtime installation failed.'
+    },
+    manualInstall: {
+      toggle: 'Install manually',
+      backToDownload: 'Back to automatic download',
+      title: 'Manual installation',
+      subtitle: 'Follow these steps to install the runtime without an internet connection.',
+      steps: [
+        {
+          title: 'Download the correct Runtime ZIP',
+          detail: 'Pick the file that matches your OS, architecture, and GPU type.'
+        },
+        {
+          title: 'Open the runtimes folder on your machine',
+          detail: 'Create the folder if it does not exist yet.'
+        },
+        {
+          title: 'Extract the ZIP into that folder',
+          detail: 'The ZIP root folder becomes the runtime directory. Do not rename it.'
+        },
+        {
+          title: 'Click Retry to detect the runtime',
+          detail: 'Whisper Studio will verify and activate the runtime automatically.'
+        }
+      ],
+      releasesLinkLabel: 'View releases on GitHub',
+      copyPath: 'Copy path',
+      copied: 'Copied!',
+      noArtifact: 'Select the ZIP for your platform and GPU.',
+      folderHint: 'Extract so the ZIP root folder sits directly inside the runtimes folder.',
+      expectedFolder: 'Expected folder name',
+      activate: 'Activate Runtime',
+      activating: 'Verifying files…'
+    }
+  },
   models: {
     header: {
       eyebrow: 'Model Manager',
@@ -105,71 +183,14 @@ export const captions = {
       emptyStorageValue: '0 B',
       modelCountSuffix: 'downloaded'
     },
-    prerequisites: {
-      title: 'Prerequisites',
-      summary: {
-        of: 'of',
-        suffix: 'dependencies installed'
-      },
-      ready: {
-        title: 'Environment ready',
-        subtitle: 'All required dependencies are installed'
-      },
-      actions: {
-        checkAll: 'Check all',
-        install: 'Install',
-        installing: 'Installing',
-        openInstaller: 'Open installer',
-        fix: 'Fix',
-        fixAll: 'Fix all',
-        expand: 'Show details',
-        collapse: 'Hide details'
-      },
-      status: {
-        ok: 'Installed',
-        missing: 'Not installed',
-        checking: 'Checking',
-        installing: 'Installing',
-        unsupported: 'Not supported',
-        attention: 'Action needed'
-      },
-      versionPrefix: 'v',
-      requiredPrefix: 'needs v',
-      installFailed: 'Install failed',
-      dependencyHint: 'Install Python first',
-      unsupportedHint: 'Not available on this platform',
-      items: [
-        {
-          id: 'python',
-          name: 'Python',
-          required: '3.8-3.12',
-          desc: 'Runtime environment for Whisper'
-        },
-        {
-          id: 'ffmpeg',
-          name: 'FFmpeg',
-          required: 'any',
-          desc: 'Audio/video extraction and decoding'
-        },
-        {
-          id: 'torch',
-          name: 'PyTorch',
-          required: '2.0+',
-          desc: 'Deep learning runtime for Whisper and GPU support'
-        },
-        {
-          id: 'whisperx',
-          name: 'whisperx',
-          required: 'any',
-          desc: 'WhisperX transcription library with word alignment (pip)'
-        },
-        {
-          id: 'cuda',
-          name: 'CUDA Toolkit',
-          required: '11.8+ / 12.x',
-          desc: 'GPU acceleration for transcription'
-        }
-      ]
+    runtime: {
+      title: 'Whisper Runtime is required',
+      subtitle: 'Install or repair the private Runtime before downloading transcription models.',
+      action: 'Set up Runtime',
+      checking: 'Checking Whisper Runtime...',
+      checkFailedTitle: 'Could not verify Whisper Runtime',
+      checkFailedSubtitle: 'Try the check again or repair the Runtime from Settings.',
+      retry: 'Check again'
     },
     catalog: {
       title: 'Models',

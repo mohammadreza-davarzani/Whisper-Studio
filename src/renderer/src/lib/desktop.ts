@@ -3,9 +3,9 @@ import type {
   DesktopApi,
   DesktopPlatform,
   DownloadedWhisperModelsResult,
-  PrerequisiteCheck,
-  PrerequisiteCheckId,
-  PrerequisiteInstallResult,
+  RuntimeActionResult,
+  RuntimeManifest,
+  RuntimeStatus,
   SystemStatus,
   WhisperModelActionResult
 } from '@shared/ipc'
@@ -30,7 +30,8 @@ const browserDesktopApi: DesktopApi = {
     version: '0.1.0',
     electron: 'browser',
     chrome: 'browser',
-    node: 'browser'
+    node: 'browser',
+    userDataPath: ''
   }),
   getPlatform: async () => detectBrowserPlatform(),
   getSystemStatus: async (): Promise<SystemStatus> => ({
@@ -46,18 +47,32 @@ const browserDesktopApi: DesktopApi = {
       { label: 'Platform', value: detectBrowserPlatform() }
     ]
   }),
-  getPrerequisites: async (): Promise<PrerequisiteCheck[]> => [
-    { id: 'python', installed: null, status: 'missing' },
-    { id: 'ffmpeg', installed: null, status: 'missing' },
-    { id: 'cuda', installed: null, status: 'missing' },
-    { id: 'torch', installed: null, status: 'missing' }
-  ],
-  installPrerequisite: async (id: PrerequisiteCheckId): Promise<PrerequisiteInstallResult> => ({
-    action: 'opened',
-    id,
-    ok: false,
-    stderr: 'Prerequisite installation is available in the Electron desktop app.'
+  getRuntimeStatus: async (): Promise<RuntimeStatus> => ({
+    active: null,
+    available: [],
+    recommended: null,
+    state: 'missing'
   }),
+  getRuntimeManifest: async (): Promise<RuntimeManifest> => ({
+    artifacts: [],
+    runtimeVersion: '1.0.0',
+    schemaVersion: 1
+  }),
+  installRuntime: async (): Promise<RuntimeActionResult> => ({
+    ok: false,
+    status: { active: null, available: [], recommended: null, state: 'missing' },
+    stderr: 'Runtime installation is available in the Electron desktop app.'
+  }),
+  removeRuntime: async (): Promise<RuntimeActionResult> => ({
+    ok: true,
+    status: { active: null, available: [], recommended: null, state: 'missing' }
+  }),
+  activateManualRuntime: async (): Promise<RuntimeActionResult> => ({
+    ok: false,
+    status: { active: null, available: [], recommended: null, state: 'missing' },
+    stderr: 'Manual activation is available in the Electron desktop app.'
+  }),
+  onRuntimeInstallProgress: () => () => undefined,
   getDownloadedModels: async (): Promise<DownloadedWhisperModelsResult> => ({
     models: [],
     totalSizeBytes: 0
@@ -94,6 +109,24 @@ const browserDesktopApi: DesktopApi = {
   readTextFile: async () => '',
   writeTextFile: async () => {},
   selectDirectory: async () => null,
+  getSettings: async () => ({
+    defaultModel: null,
+    defaultLanguage: 'Auto',
+    defaultTask: 'transcribe',
+    defaultCompute: 'auto',
+    defaultOutputDirectory: null,
+    defaultExportFormats: ['srt', 'vtt', 'txt', 'tsv'],
+    hfToken: null
+  }),
+  setSettings: async () => undefined,
+  checkForUpdates: async () => ({
+    currentVersion: '0.1.0',
+    hasUpdate: false,
+    latestVersion: '0.1.0',
+    releaseUrl: '',
+    releaseName: 'Whisper Studio'
+  }),
+  openExternal: async () => undefined,
   windowControls: {
     isMaximized: async () => false,
     minimize: async () => undefined,
