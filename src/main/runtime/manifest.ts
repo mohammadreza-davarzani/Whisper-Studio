@@ -2,9 +2,7 @@ import { app, net } from 'electron'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { RuntimeArtifact, RuntimeManifest } from '../../shared/ipc'
-
-const DEFAULT_MANIFEST_URL =
-  'https://github.com/mohammadKarimi/Whisper-Studio/releases/latest/download/runtime-manifest.json'
+import { DEFAULT_MANIFEST_URL } from '../../shared/constants'
 
 function isArtifact(value: unknown): value is RuntimeArtifact {
   if (!value || typeof value !== 'object') return false

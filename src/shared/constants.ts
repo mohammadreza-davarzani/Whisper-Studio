@@ -389,3 +389,6 @@ export const WHISPER_LANGUAGE_CODES: Record<string, string> = {
   yiddish: 'yi',
   yoruba: 'yo'
 }
+
+export const DEFAULT_MANIFEST_URL =
+  'https://github.com/mohammadKarimi/Whisper-Studio/releases/download/runtime-v1.0.0/runtime-manifest.json'
