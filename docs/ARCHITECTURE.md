@@ -234,7 +234,7 @@ Key files:
 
 - `ipc.ts` — `IPC_CHANNELS` constant, all request/response types, and the desktop API interfaces (see below)
 - `types.ts` — `Result<T, E>` discriminated union for operations that can succeed or fail, plus `ok()` and `err()` helpers
-- `errors.ts` — typed error classes (`TranscriptionError`, `ModelError`, `PrerequisiteError`)
+- `errors.ts` — typed error classes (`TranscriptionError`, `PrerequisiteError`)
 - `constants.ts` — application-wide constants shared across processes
 
 ### Desktop API Interfaces (ISP)

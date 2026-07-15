@@ -3,7 +3,6 @@ import {
   type LucideIcon,
   LayoutDashboard,
   Settings,
-  Search,
   AudioLines,
   Moon,
   Sun,
@@ -50,7 +49,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ activeRoute, onNavigate }: AppSidebarProps): JSX.Element {
-  const [collapsed, setCollapsed] = useState(true)
+  const [collapsed, setCollapsed] = useState(false)
   const [theme, setTheme] = useState<ThemeMode>(getInitialTheme)
   const isLightTheme = theme === 'light'
 
@@ -81,11 +80,9 @@ export function AppSidebar({ activeRoute, onNavigate }: AppSidebarProps): JSX.El
         ) : (
           <div className="flex items-center gap-1.5">
             <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sidebar-foreground" />
-              <input
-                placeholder={captions.sidebar.searchPlaceholder}
-                className="w-full h-8 pl-8 pr-3 rounded-lg bg-sidebar-accent border border-sidebar-border text-[12px] text-sidebar-accent-foreground placeholder:text-sidebar-foreground/50 outline-none focus:border-sidebar-ring transition-colors"
-              />
+              <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                {captions.sidebar.workspace}
+              </p>
             </div>
             <Tooltip>
               <TooltipTrigger
@@ -104,7 +101,7 @@ export function AppSidebar({ activeRoute, onNavigate }: AppSidebarProps): JSX.El
       <nav className="flex-1 overflow-y-auto px-3 pb-2">
         {navSections.map((section) => (
           <div key={section.title} className="mb-3">
-            {!collapsed && (
+            {!collapsed && section.title && (
               <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
                 {section.title}
               </p>
@@ -153,7 +150,7 @@ export function AppSidebar({ activeRoute, onNavigate }: AppSidebarProps): JSX.El
       </nav>
 
       {/* Theme */}
-      <div className="px-3 pt-1 pb-1">
+      <div className="px-3 space-y-0.5">
         {collapsed ? (
           <Tooltip className="w-full">
             <TooltipTrigger
@@ -191,7 +188,7 @@ export function AppSidebar({ activeRoute, onNavigate }: AppSidebarProps): JSX.El
 
       {/* Settings + Report a Bug */}
 
-      <div className="px-3 pb-1 pt-1">
+      <div className="px-3 space-y-0.5">
         {collapsed ? (
           <Tooltip className="w-full">
             <TooltipTrigger
