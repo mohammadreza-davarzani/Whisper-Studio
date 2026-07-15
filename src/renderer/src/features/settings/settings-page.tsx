@@ -16,12 +16,12 @@ import {
   FolderOutput,
   Database,
   Info,
-  Heart,
   KeyRound
 } from 'lucide-react'
 import { WHISPER_LANGUAGES } from '@shared/constants'
 import type { AppInfo, DesktopApi, UpdateCheckResult } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
+import { BrandedPage } from '@/components/branded-page'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import {
@@ -36,7 +36,7 @@ import { DeleteAllConfirmModal } from './components/delete-all-confirm-modal'
 import { SettingsCard } from './components/settings-card'
 import { SettingRow } from './components/setting-row'
 import { useSettings } from './use-settings'
-import flagUrl from '../../../../../resources/National_flag_of_Iran.svg'
+import { RuntimeSettingsCard } from '@/features/settings/components/runtime-settings-card'
 
 const EXPORT_FORMATS = ['srt', 'vtt', 'txt', 'tsv'] as const
 
@@ -93,14 +93,14 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
 
   if (loading) {
     return (
-      <div className="grid h-full place-items-center">
+      <BrandedPage contentClassName="grid place-items-center" version={appInfo?.version}>
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
+      </BrandedPage>
     )
   }
 
   return (
-    <div className="h-full overflow-y-auto">
+    <BrandedPage version={appInfo?.version}>
       <div className="mx-auto max-w-3xl space-y-4 px-6 py-8">
         {/* ── Hero: App info + Check for Updates ───────────────────────── */}
         <div className="relative overflow-hidden rounded-3xl border border-border/40 bg-gradient-to-br from-primary/10 via-card to-card p-8">
@@ -255,6 +255,8 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
           </SettingRow>
         </SettingsCard>
 
+        <RuntimeSettingsCard desktop={desktop} />
+
         <SettingsCard icon={<Database className="h-4 w-4 text-primary" />} title="Storage">
           <SettingRow
             label="Delete All Transcriptions"
@@ -308,13 +310,6 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
             />
           </div>
         </SettingsCard>
-
-        {/* ── Footer ──────────────────────────────────────────────────── */}
-        <p className="flex items-center justify-center gap-1.5 pb-2 text-xs text-muted-foreground/50">
-          Built with <Heart className="h-3 w-3 fill-destructive text-destructive" /> under the same
-          sky.
-          <img src={flagUrl} className="h-3 w-3" alt="" />
-        </p>
       </div>
       <DeleteAllConfirmModal
         open={deleteModalOpen}
@@ -322,6 +317,6 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
         onCancel={() => setDeleteModalOpen(false)}
         onConfirm={() => void handleDeleteAll()}
       />
-    </div>
+    </BrandedPage>
   )
 }

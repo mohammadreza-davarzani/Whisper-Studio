@@ -7,7 +7,8 @@ import { SplashScreen } from './components/splash-screen'
 import { SystemStatusBar } from './components/system-status-bar'
 import { TitleBar } from './components/title-bar'
 import { captions } from './lib/strings'
-import { StudioProvider } from './lib/studio-context'
+import { StudioProvider } from './app/studio-context'
+import RuntimeSetup from './features/runtime'
 
 // ---------------------------------------------------------------------------
 // Error boundary — catches render-time and lifecycle errors in route views.
@@ -56,16 +57,32 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 // ---------------------------------------------------------------------------
 
 export function App(): JSX.Element {
-  const { appInfo, desktop, isShellReady, isWindowMaximized, platform, systemStatus } =
-    useDesktopShell()
+  const {
+    appInfo,
+    desktop,
+    isShellReady,
+    isWindowMaximized,
+    platform,
+    runtimeStatus,
+    setRuntimeStatus,
+    systemStatus
+  } = useDesktopShell()
   const { activeRoute, navigateTo } = useAppRoute()
+  const showSetup = isShellReady && runtimeStatus !== null && runtimeStatus.state !== 'ready'
 
   return (
-    <div className="grid h-screen min-h-0 w-screen grid-rows-[2.375rem_minmax(0,1fr)_1.75rem] overflow-hidden bg-background text-foreground">
+    <div
+      className={`grid h-screen min-h-0 w-screen overflow-hidden bg-background text-foreground ${
+        showSetup
+          ? 'grid-rows-[2.375rem_minmax(0,1fr)]'
+          : 'grid-rows-[2.375rem_minmax(0,1fr)_1.75rem]'
+      }`}
+    >
       <SplashScreen ready={isShellReady} version={appInfo?.version} />
 
       <TitleBar
         appName={appInfo?.name ?? captions.app.defaultName}
+        title={showSetup ? 'Runtime Setup' : captions.titleBar.workspace}
         isMaximized={isWindowMaximized}
         platform={platform}
         onMinimize={desktop.windowControls.minimize}
@@ -73,18 +90,34 @@ export function App(): JSX.Element {
         onClose={desktop.windowControls.close}
       />
 
-      <div className="grid min-h-0 grid-cols-[auto_minmax(0,1fr)] overflow-hidden">
-        <AppSidebar activeRoute={activeRoute} onNavigate={navigateTo} />
+      <div
+        className={`grid min-h-0 overflow-hidden ${
+          showSetup ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[auto_minmax(0,1fr)]'
+        }`}
+      >
+        {!showSetup && <AppSidebar activeRoute={activeRoute} onNavigate={navigateTo} />}
         <main className="shell-main min-h-0 overflow-x-hidden overflow-y-auto bg-background">
           <StudioProvider>
             <ErrorBoundary>
-              <AppRouteView activeRoute={activeRoute} desktop={desktop} />
+              {showSetup ? (
+                <RuntimeSetup
+                  desktop={desktop}
+                  initialStatus={runtimeStatus!}
+                  onReady={(status) => {
+                    setRuntimeStatus(status)
+                    navigateTo('models')
+                  }}
+                  version={appInfo?.version}
+                />
+              ) : (
+                <AppRouteView activeRoute={activeRoute} desktop={desktop} />
+              )}
             </ErrorBoundary>
           </StudioProvider>
         </main>
       </div>
 
-      <SystemStatusBar appVersion={appInfo?.version} status={systemStatus} />
+      {!showSetup && <SystemStatusBar appVersion={appInfo?.version} status={systemStatus} />}
     </div>
   )
 }

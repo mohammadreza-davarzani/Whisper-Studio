@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
-import { createWriteStream } from 'node:fs'
-import { cp, mkdir, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises'
+import { createReadStream, createWriteStream } from 'node:fs'
+import { cp, mkdir, realpath, rm, stat, writeFile } from 'node:fs/promises'
 import { basename, join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import archiver from 'archiver'
@@ -60,6 +60,12 @@ function run(command, commandArgs) {
   }
 }
 
+async function hashFile(path) {
+  const hash = createHash('sha256')
+  for await (const chunk of createReadStream(path)) hash.update(chunk)
+  return hash.digest('hex')
+}
+
 // The source Python may be managed by uv and marked as externally managed.
 // We only modify the disposable copy in the runtime staging directory.
 const pipInstall = ['-m', 'pip', 'install', '--break-system-packages']
@@ -69,6 +75,18 @@ const torchIndex =
   accelerator === 'cuda'
     ? 'https://download.pytorch.org/whl/cu128'
     : 'https://download.pytorch.org/whl/cpu'
+// The portable Python source may already contain a different Torch variant.
+// Remove it first because pip considers 2.8.0+cpu a match for torch==2.8.0.
+run(python, [
+  '-m',
+  'pip',
+  'uninstall',
+  '--break-system-packages',
+  '--yes',
+  'torch',
+  'torchaudio',
+  'torchvision'
+])
 run(python, [
   ...pipInstall,
   '--no-cache-dir',
@@ -81,7 +99,13 @@ run(python, [
 run(python, [...pipInstall, '--no-cache-dir', 'whisperx==3.8.6'])
 run(python, [
   '-c',
-  'import ctranslate2, faster_whisper, torch, torchaudio, whisperx; print(torch.__version__)'
+  [
+    'import ctranslate2, faster_whisper, torch, torchaudio, whisperx',
+    `expected_cuda = ${accelerator === 'cuda' ? 'True' : 'False'}`,
+    'actual_cuda = torch.version.cuda is not None',
+    'print({"torch": torch.__version__, "cuda": torch.version.cuda})',
+    'raise SystemExit(0 if actual_cuda == expected_cuda else 2)'
+  ].join('; ')
 ])
 
 await writeFile(
@@ -112,7 +136,6 @@ await new Promise((resolveArchive, rejectArchive) => {
   void zip.finalize()
 })
 
-const bytes = await readFile(archivePath)
 const artifact = {
   accelerator,
   arch,
@@ -120,7 +143,7 @@ const artifact = {
   id,
   ...(minimumNvidiaDriver ? { minimumNvidiaDriver } : {}),
   platform,
-  sha256: createHash('sha256').update(bytes).digest('hex'),
+  sha256: await hashFile(archivePath),
   sizeBytes: (await stat(archivePath)).size,
   url: baseUrl ? `${baseUrl}/${basename(archivePath)}` : basename(archivePath),
   version: runtimeVersion

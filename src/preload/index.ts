@@ -10,10 +10,10 @@ import {
   type DownloadedWhisperModelsResult,
   type FileSystemApi,
   type ModelApi,
-  type PrerequisiteCheck,
-  type PrerequisiteCheckId,
-  type PrerequisiteInstallProgress,
-  type PrerequisiteInstallResult,
+  type RuntimeActionResult,
+  type RuntimeInstallProgress,
+  type RuntimeManifest,
+  type RuntimeStatus,
   type SettingsApi,
   type SystemStatus,
   type TranscriptionApi,
@@ -32,19 +32,18 @@ const appApi: AppApi = {
   getAppInfo: () => ipcRenderer.invoke(IPC_CHANNELS.appInfo) as Promise<AppInfo>,
   getPlatform: () => ipcRenderer.invoke(IPC_CHANNELS.platform) as Promise<DesktopPlatform>,
   getSystemStatus: () => ipcRenderer.invoke(IPC_CHANNELS.systemStatus) as Promise<SystemStatus>,
-  getPrerequisites: () =>
-    ipcRenderer.invoke(IPC_CHANNELS.prerequisites) as Promise<PrerequisiteCheck[]>,
-  installPrerequisite: (id: PrerequisiteCheckId) =>
-    ipcRenderer.invoke(IPC_CHANNELS.prerequisiteInstall, id) as Promise<PrerequisiteInstallResult>,
-  onPrerequisiteInstallProgress: (callback) => {
-    const listener = (
-      _event: Electron.IpcRendererEvent,
-      progress: PrerequisiteInstallProgress
-    ): void => {
+  getRuntimeStatus: () => ipcRenderer.invoke(IPC_CHANNELS.runtimeStatus) as Promise<RuntimeStatus>,
+  getRuntimeManifest: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.runtimeManifest) as Promise<RuntimeManifest>,
+  installRuntime: (artifactId?: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.runtimeInstall, artifactId) as Promise<RuntimeActionResult>,
+  removeRuntime: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.runtimeRemove) as Promise<RuntimeActionResult>,
+  onRuntimeInstallProgress: (callback) => {
+    const listener = (_event: Electron.IpcRendererEvent, progress: RuntimeInstallProgress): void =>
       callback(progress)
-    }
-    ipcRenderer.on(IPC_CHANNELS.prerequisiteInstallProgress, listener)
-    return () => ipcRenderer.removeListener(IPC_CHANNELS.prerequisiteInstallProgress, listener)
+    ipcRenderer.on(IPC_CHANNELS.runtimeInstallProgress, listener)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.runtimeInstallProgress, listener)
   },
   getFilePath: (file: unknown) =>
     webUtils.getPathForFile(file as Parameters<typeof webUtils.getPathForFile>[0])

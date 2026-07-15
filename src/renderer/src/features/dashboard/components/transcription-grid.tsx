@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { TranscriptionApi, TranscriptionRecord } from '@shared/ipc'
 import { Mic, Clock, FileAudio, Trash2, Loader2, FolderOpen } from 'lucide-react'
-import { useStudioContext } from '@/lib/studio-context'
+import { useStudioContext } from '@/app/studio-context'
 import { captions } from '@/lib/strings'
 import { useAppRoute } from '@/app/use-app-route'
 import { Button } from '@/components/ui/button'

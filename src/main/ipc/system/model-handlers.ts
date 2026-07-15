@@ -144,7 +144,8 @@ async function resolvePython(modelId: string): Promise<PythonInfo | WhisperModel
     return {
       id: modelId,
       ok: false,
-      stderr: 'Python was not found. Install Python before downloading models.'
+      stderr:
+        'Whisper Runtime is not ready. Install or repair the Runtime before downloading models.'
     }
   }
   return python

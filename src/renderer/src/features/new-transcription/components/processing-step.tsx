@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { TranscriptionApi, TranscriptionRecord, WhisperProgressPhase } from '@shared/ipc'
-import { useStudioContext } from '@/lib/studio-context'
+import { useStudioContext } from '@/app/studio-context'
 import { useAppRoute } from '@/app/use-app-route'
 import { Button } from '@/components/ui/button'
 import { captions } from '@/lib/strings'

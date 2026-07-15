@@ -1,6 +1,7 @@
 import { app, ipcMain } from 'electron'
 import { IPC_CHANNELS, SystemStatus } from '../../../shared/ipc'
 import { cpus, totalmem } from 'os'
+import { getActiveRuntime } from '../../runtime/manager'
 
 type BasicGpuDevice = {
   active?: boolean
@@ -38,11 +39,11 @@ async function getPrimaryGpu(): Promise<string> {
 
 export async function getSystemStatus(): Promise<SystemStatus> {
   const primaryCpu = cpus()[0]?.model?.replace(/\s+/g, ' ').trim() || process.arch
-  const primaryGpu = await getPrimaryGpu()
+  const [primaryGpu, runtime] = await Promise.all([getPrimaryGpu(), getActiveRuntime()])
 
   return {
-    ready: true,
-    status: 'System Ready',
+    ready: runtime !== null,
+    status: runtime ? 'Runtime Ready' : 'Runtime Required',
     activity: `v${app.getVersion()}`,
     metrics: [
       { label: 'CPU', value: primaryCpu },

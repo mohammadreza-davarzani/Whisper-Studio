@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Heart } from 'lucide-react'
-import flagUrl from '../../../../resources/National_flag_of_Iran.svg'
 import logoUrl from '../logo.svg'
+import { BrandFooter, BrandedBackdrop } from './branded-page'
 
 const MIN_SPLASH_MS = 4500
 const FADE_MS = 500
@@ -46,7 +45,7 @@ export function SplashScreen({ ready, version }: SplashScreenProps): JSX.Element
       aria-live="polite"
       aria-busy={!ready}
     >
-      <div className="absolute inset-0 splash-background" />
+      <BrandedBackdrop />
       <div className="relative flex flex-col items-center gap-4 px-8 text-center">
         <img src={logoUrl} className="relative size-24" alt="" />
 
@@ -60,16 +59,7 @@ export function SplashScreen({ ready, version }: SplashScreenProps): JSX.Element
         </div>
       </div>
 
-      <div className="absolute bottom-4 text-center w-full">
-        <p className=" text-[10px] text-muted-foreground">
-          Whisper Studio is free and open source software. {version && <span>v{version}</span>}
-        </p>
-        <p className="text-[10px] mt-1 text-muted-foreground flex items-center justify-center gap-1">
-          Built with <Heart className="h-3 w-3 fill-destructive text-destructive" /> under the same
-          sky.
-          <img src={flagUrl} className="h-3 w-3" alt="" />
-        </p>
-      </div>
+      <BrandFooter className="absolute bottom-4 w-full" version={version} />
     </div>
   )
 }

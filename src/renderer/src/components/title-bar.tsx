@@ -8,6 +8,7 @@ import logoUrl from '../logo.svg'
 
 interface TitleBarProps {
   appName: string
+  title?: string
   isMaximized: boolean
   platform: DesktopPlatform
   onMinimize: () => Promise<void>
@@ -17,6 +18,7 @@ interface TitleBarProps {
 
 export function TitleBar({
   appName,
+  title,
   isMaximized,
   platform,
   onMinimize,
@@ -49,7 +51,7 @@ export function TitleBar({
       <div className="min-w-0 flex-1" />
       <div className="hidden items-center gap-1.5 text-[11px] text-muted-foreground/50 md:flex">
         <span className="rounded bg-secondary/40 px-2 py-0.5 font-mono">
-          {captions.titleBar.workspace}
+          {title ?? captions.titleBar.workspace}
         </span>
       </div>
       <div className="min-w-0 flex-1" />

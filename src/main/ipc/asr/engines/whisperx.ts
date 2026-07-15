@@ -6,7 +6,9 @@ import type { WhisperTranscriptionRequest } from '../../../../shared/ipc'
 import { TranscriptionError } from '../../../../shared/errors'
 import { type Result, err, ok } from '../../../../shared/types'
 import { parseWhisperJson } from '../../../parser'
-import { getOutputDirectory, getVenvBinPath } from '../../../paths'
+import { getOutputDirectory } from '../../../paths'
+import { getActiveRuntime } from '../../../runtime/manager'
+import { getRuntimePythonPath } from '../../../runtime/paths'
 import { readSettings } from '../../system/settings-handlers'
 import type {
   TranscriptionEngine,
@@ -73,7 +75,11 @@ async function runWhisperX(
   }
 
   emitProgress({ phase: 'checking-command', state: 'complete', message: 'Starting transcription.' })
-  emitProgress({ phase: 'checking-whisper', state: 'complete', message: 'Environment ready.' })
+  const runtime = await getActiveRuntime()
+  if (!runtime) {
+    return err(new TranscriptionError('Whisper Runtime is not installed.', null, ''))
+  }
+  emitProgress({ phase: 'checking-whisper', state: 'complete', message: 'Runtime ready.' })
 
   const extension = extname(request.filePath)
   const baseName = sanitizeFileName(basename(request.filePath, extension)) || 'transcript'
@@ -94,18 +100,17 @@ async function runWhisperX(
     )
   }
 
-  const args = buildArgs(request, outputDirectory, hfToken)
-  const whisperxBin = join(
-    getVenvBinPath(),
-    process.platform === 'win32' ? 'whisperx.exe' : 'whisperx'
-  )
-  const command = `${whisperxBin} ${args.join(' ')}`
+  const args = ['-m', 'whisperx', ...buildArgs(request, outputDirectory, hfToken)]
+  const python = getRuntimePythonPath(runtime.root)
+  const command = [python, ...args]
+    .map((argument) => (argument.includes(' ') ? `"${argument}"` : argument))
+    .join(' ')
 
   emitProgress({ phase: 'sending-command', state: 'complete', message: command })
 
   return new Promise<Result<TranscriptionEngineResult, TranscriptionError>>((resolve) => {
-    const child = spawn(whisperxBin, args, {
-      env: getPythonEnv(),
+    const child = spawn(python, args, {
+      env: getPythonEnv(runtime.root),
       windowsHide: true
     })
 

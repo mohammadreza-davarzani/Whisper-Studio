@@ -7,22 +7,12 @@ import {
   Star,
   Boxes,
   Languages,
-  Search,
   CheckCircle2,
   Trash2,
-  RefreshCw,
   Lock
 } from 'lucide-react'
 import type { DownloadedWhisperModel, WhisperModelDownloadProgress } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatBytes, secondsToDisplay } from '@/lib/utils'
 import { captions } from '@/lib/strings'
@@ -34,7 +24,6 @@ const catalogCaptions = captions.models.catalog
 
 type WhisperCatalogModel = (typeof WHISPER_CATALOG_MODELS)[number]
 type ModelSpeed = WhisperCatalogModel['speed']
-type SortKey = 'recommended' | 'sizeAsc' | 'sizeDesc' | 'speed' | 'accuracy'
 type FilterKey = 'all' | 'installed' | 'available'
 
 const speedColor: Record<ModelSpeed, string> = {
@@ -43,23 +32,6 @@ const speedColor: Record<ModelSpeed, string> = {
   Fast: 'text-chart-2',
   Medium: 'text-warning',
   Slow: 'text-muted-foreground'
-}
-
-// Higher rank = faster, used for "Fastest first" sorting.
-const speedRank: Record<ModelSpeed, number> = {
-  Fastest: 5,
-  'Very Fast': 4,
-  Fast: 3,
-  Medium: 2,
-  Slow: 1
-}
-
-// Higher rank = more accurate, used for "Most accurate first" sorting.
-const accuracyRank: Record<string, number> = {
-  Low: 1,
-  Medium: 2,
-  High: 3,
-  Highest: 4
 }
 
 // A single row in the unified catalog. Catalog models and any extra downloaded
@@ -83,10 +55,9 @@ interface ModelsCatalogProps {
   canDownload: boolean
   downloadProgress: Record<string, WhisperModelDownloadProgress>
   downloadedModels: DownloadedWhisperModel[]
-  isLoading: boolean
+  isCheckingRuntime: boolean
   onDelete: (id: string) => Promise<void>
   onDownload: (repoId: string) => Promise<void>
-  onRefresh: () => void
   totalSizeBytes: number
 }
 
@@ -138,14 +109,11 @@ export default function ModelsCatalog({
   canDownload,
   downloadProgress,
   downloadedModels,
-  isLoading,
+  isCheckingRuntime,
   onDelete,
   onDownload,
-  onRefresh,
   totalSizeBytes
 }: ModelsCatalogProps) {
-  const [search, setSearch] = useState('')
-  const [sortKey, setSortKey] = useState<SortKey>('recommended')
   const [filter, setFilter] = useState<FilterKey>('all')
   const [downloadingRepos, setDownloadingRepos] = useState<Set<string>>(() => new Set())
   const [deletingIds, setDeletingIds] = useState<Set<string>>(() => new Set())
@@ -243,48 +211,14 @@ export default function ModelsCatalog({
   const availableCount = entries.length - installedCount
 
   const visibleEntries = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    const filtered = entries.filter((entry) => {
-      if (filter === 'installed' && !entry.installed) {
-        return false
-      }
-
-      if (filter === 'available' && entry.installed) {
-        return false
-      }
-
-      if (!query) {
+    return entries
+      .filter((entry) => {
+        if (filter === 'installed') return Boolean(entry.installed)
+        if (filter === 'available') return !entry.installed
         return true
-      }
-
-      return entry.name.toLowerCase().includes(query) || entry.desc.toLowerCase().includes(query)
-    })
-
-    const sorted = [...filtered]
-
-    switch (sortKey) {
-      case 'sizeAsc':
-        sorted.sort((a, b) => a.sizeBytes - b.sizeBytes)
-        break
-      case 'sizeDesc':
-        sorted.sort((a, b) => b.sizeBytes - a.sizeBytes)
-        break
-      case 'speed':
-        sorted.sort(
-          (a, b) => (b.speed ? speedRank[b.speed] : 0) - (a.speed ? speedRank[a.speed] : 0)
-        )
-        break
-      case 'accuracy':
-        sorted.sort(
-          (a, b) => (accuracyRank[b.accuracy ?? ''] ?? 0) - (accuracyRank[a.accuracy ?? ''] ?? 0)
-        )
-        break
-      default:
-        sorted.sort((a, b) => Number(b.recommended) - Number(a.recommended))
-    }
-
-    return sorted
-  }, [entries, search, sortKey, filter])
+      })
+      .sort((a, b) => Number(b.recommended) - Number(a.recommended))
+  }, [entries, filter])
 
   const clearError = (key: string): void => {
     setErrorByKey((prev) => {
@@ -341,23 +275,14 @@ export default function ModelsCatalog({
     }
   }
 
-  const sortLabels: Record<SortKey, string> = {
-    recommended: availableCaptions.sort.recommended,
-    sizeAsc: availableCaptions.sort.sizeAsc,
-    sizeDesc: availableCaptions.sort.sizeDesc,
-    speed: availableCaptions.sort.speed,
-    accuracy: availableCaptions.sort.accuracy
-  }
-
   const filterOptions: { key: FilterKey; label: string; count: number }[] = [
     { key: 'all', label: catalogCaptions.filter.all, count: entries.length },
     { key: 'installed', label: catalogCaptions.filter.installed, count: installedCount },
     { key: 'available', label: catalogCaptions.filter.available, count: availableCount }
   ]
 
-  const emptyMessage = search.trim()
-    ? catalogCaptions.empty.search
-    : filter === 'installed'
+  const emptyMessage =
+    filter === 'installed'
       ? catalogCaptions.empty.installed
       : filter === 'available'
         ? catalogCaptions.empty.available
@@ -374,74 +299,43 @@ export default function ModelsCatalog({
         </p>
       </div>
 
-      {/* Unified toolbar: filter tabs (left) aligned with search / sort / refresh (right) */}
-      <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between mb-4">
-        <div className="inline-flex h-9 items-center gap-1 rounded-lg border border-border/40 bg-card p-1 self-start">
-          {filterOptions.map((option) => (
-            <button
-              key={option.key}
-              type="button"
-              onClick={() => setFilter(option.key)}
-              className={`flex h-7 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors ${
+      <div className="mb-4 flex w-full items-center gap-1 rounded-xl border border-border/40 bg-card p-1">
+        {filterOptions.map((option) => (
+          <button
+            key={option.key}
+            type="button"
+            onClick={() => setFilter(option.key)}
+            className={`flex h-9 items-center gap-2 rounded-lg px-3 text-xs font-medium transition-colors ${
+              filter === option.key
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
+            }`}
+          >
+            {option.label}
+            <span
+              className={`rounded-full px-1.5 text-[10px] font-mono ${
                 filter === option.key
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary-foreground/20'
+                  : 'bg-secondary text-muted-foreground'
               }`}
             >
-              {option.label}
-              <span
-                className={`rounded-full px-1.5 text-[10px] font-mono ${
-                  filter === option.key
-                    ? 'bg-primary-foreground/20'
-                    : 'bg-secondary text-muted-foreground'
-                }`}
-              >
-                {option.count}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[10rem] sm:w-56 sm:flex-none">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={availableCaptions.searchPlaceholder}
-              className="h-9 pl-8 text-xs"
-            />
-          </div>
-          <Select value={sortKey} onValueChange={(value) => setSortKey(value as SortKey)}>
-            <SelectTrigger className="h-9 w-44 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.keys(sortLabels) as SortKey[]).map((key) => (
-                <SelectItem key={key} value={key}>
-                  {sortLabels[key]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onRefresh}
-            disabled={isLoading}
-            title={downloadedCaptions.actions.refresh}
-            aria-label={downloadedCaptions.actions.refresh}
-            className="h-9 w-9 shrink-0 text-muted-foreground"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
+              {option.count}
+            </span>
+          </button>
+        ))}
       </div>
 
-      {/* When prerequisites are missing, blur the catalog and overlay a hint
+      {/* When the Runtime is missing, blur the catalog and overlay a hint
           instead of pushing an inline warning above the models. */}
       <div className="relative">
-        {!canDownload && (
+        {isCheckingRuntime ? (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/40 backdrop-blur-sm">
+            <div className="flex items-center gap-3 rounded-2xl border border-border/50 bg-card/90 px-6 py-5 text-sm text-muted-foreground shadow-lg">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              {captions.models.runtime.checking}
+            </div>
+          </div>
+        ) : !canDownload ? (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/40 backdrop-blur-sm">
             <div className="flex max-w-sm flex-col items-center gap-2 rounded-2xl border border-border/50 bg-card/90 px-6 py-5 text-center shadow-lg">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning/10">
@@ -450,19 +344,19 @@ export default function ModelsCatalog({
               <p className="text-sm font-medium text-foreground">{availableCaptions.blockedHint}</p>
             </div>
           </div>
-        )}
+        ) : null}
 
         <div
           className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 ${
-            canDownload ? '' : 'pointer-events-none select-none'
+            canDownload && !isCheckingRuntime ? '' : 'pointer-events-none select-none'
           }`}
-          aria-hidden={!canDownload}
+          aria-hidden={!canDownload || isCheckingRuntime}
         >
           {visibleEntries.length === 0 ? (
             <div className="glass-panel col-span-full rounded-2xl p-10 text-center">
               <Boxes className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">{emptyMessage}</p>
-              {!search.trim() && filter !== 'installed' && (
+              {filter !== 'installed' && (
                 <p className="text-xs text-muted-foreground/60 mt-1">
                   {catalogCaptions.empty.subtitle}
                 </p>

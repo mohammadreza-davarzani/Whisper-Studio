@@ -8,7 +8,7 @@ import AudioPlayer from '@/features/studio/components/audio-player'
 import SpeakerPanel from '@/features/studio/components/speaker-panel'
 import TranscriptSegment from '@/features/studio/components/transcript-segment'
 import type { DesktopApi } from '@shared/ipc'
-import { useStudioContext } from '@/lib/studio-context'
+import { useStudioContext } from '@/app/studio-context'
 import { useAppRoute } from '@/app/use-app-route'
 import { useTranscriptEditor } from './hooks/use-transcript-editor'
 

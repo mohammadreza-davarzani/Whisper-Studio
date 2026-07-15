@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { AppInfo, DesktopApi, DesktopPlatform, SystemStatus } from '@shared/ipc'
+import type { AppInfo, DesktopApi, DesktopPlatform, RuntimeStatus, SystemStatus } from '@shared/ipc'
 import { getDesktopApi } from '@/lib/desktop'
 
 interface DesktopShellState {
@@ -9,6 +9,8 @@ interface DesktopShellState {
   isShellReady: boolean
   platform: DesktopPlatform
   systemStatus: SystemStatus | null
+  runtimeStatus: RuntimeStatus | null
+  setRuntimeStatus: (status: RuntimeStatus) => void
 }
 
 export function useDesktopShell(): DesktopShellState {
@@ -18,17 +20,19 @@ export function useDesktopShell(): DesktopShellState {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null)
   const [isShellReady, setIsShellReady] = useState(false)
+  const [runtimeStatus, setRuntimeStatus] = useState<RuntimeStatus | null>(null)
 
   useEffect(() => {
     let mounted = true
 
     const loadShellState = async (): Promise<void> => {
-      const [platformResult, appInfoResult, systemStatusResult, isMaximizedResult] =
+      const [platformResult, appInfoResult, systemStatusResult, isMaximizedResult, runtimeResult] =
         await Promise.allSettled([
           desktop.getPlatform(),
           desktop.getAppInfo(),
           desktop.getSystemStatus(),
-          desktop.windowControls.isMaximized()
+          desktop.windowControls.isMaximized(),
+          desktop.getRuntimeStatus()
         ])
 
       if (!mounted) return
@@ -37,6 +41,8 @@ export function useDesktopShell(): DesktopShellState {
       if (appInfoResult.status === 'fulfilled') setAppInfo(appInfoResult.value)
       if (systemStatusResult.status === 'fulfilled') setSystemStatus(systemStatusResult.value)
       if (isMaximizedResult.status === 'fulfilled') setIsWindowMaximized(isMaximizedResult.value)
+      if (runtimeResult.status === 'fulfilled') setRuntimeStatus(runtimeResult.value)
+      else setRuntimeStatus({ active: null, available: [], recommended: null, state: 'missing' })
       setIsShellReady(true)
     }
 
@@ -55,6 +61,8 @@ export function useDesktopShell(): DesktopShellState {
     isWindowMaximized,
     isShellReady,
     platform,
-    systemStatus
+    systemStatus,
+    runtimeStatus,
+    setRuntimeStatus
   }
 }

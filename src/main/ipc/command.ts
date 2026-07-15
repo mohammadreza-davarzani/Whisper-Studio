@@ -1,10 +1,10 @@
 // Shared Python discovery for system checks and model management.
 // Prefers the pinned target version (e.g. python3.12 / py -3.12) so that an installed
 
-import { PYTHON_TARGET_VERSION } from '../../shared/constants'
 import { execFile } from 'node:child_process'
 import { parseVersion } from './utils'
-import { getVenvPythonPath } from '../paths'
+import { getActiveRuntime } from '../runtime/manager'
+import { getRuntimePythonPath } from '../runtime/paths'
 
 export type CommandResult = {
   command: string
@@ -21,35 +21,11 @@ export type CommandCandidate = {
 
 // supported interpreter is used even when a newer, unsupported Python is also on PATH.
 export async function findPython(): Promise<CommandResult | null> {
-  // Prefer the app-managed venv Python — it is isolated from system packages.
-  const venvPythonPath = getVenvPythonPath()
-  const venvOutput = await runCommand(venvPythonPath, ['--version'], 1500)
-  if (venvOutput && parseVersion(venvOutput)) {
-    return { command: venvPythonPath, output: venvOutput, prefixArgs: [] }
-  }
-
-  const candidates = [
-    { command: `python${PYTHON_TARGET_VERSION}`, args: ['--version'], timeoutMs: 1500 },
-    {
-      command: 'py',
-      prefixArgs: [`-${PYTHON_TARGET_VERSION}`],
-      args: ['--version'],
-      timeoutMs: 1500
-    },
-    { command: 'python', args: ['--version'], timeoutMs: 2500 },
-    { command: 'python3', args: ['--version'], timeoutMs: 1200 },
-    { command: 'py', prefixArgs: ['-3'], args: ['--version'], timeoutMs: 1200 }
-  ]
-
-  for (const candidate of candidates) {
-    const result = await runCommandCandidate([candidate])
-
-    if (result && parseVersion(result.output)) {
-      return result
-    }
-  }
-
-  return null
+  const runtime = await getActiveRuntime()
+  if (!runtime) return null
+  const command = getRuntimePythonPath(runtime.root)
+  const output = await runCommand(command, ['--version'], 2500)
+  return output && parseVersion(output) ? { command, output, prefixArgs: [] } : null
 }
 
 export async function runCommandCandidate(

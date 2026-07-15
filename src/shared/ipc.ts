@@ -2,9 +2,11 @@ export const IPC_CHANNELS = {
   appInfo: 'app:info',
   platform: 'system:platform',
   systemStatus: 'system:status',
-  prerequisites: 'system:prerequisites',
-  prerequisiteInstall: 'system:prerequisite-install',
-  prerequisiteInstallProgress: 'system:prerequisite-install-progress',
+  runtimeStatus: 'runtime:status',
+  runtimeManifest: 'runtime:manifest',
+  runtimeInstall: 'runtime:install',
+  runtimeInstallProgress: 'runtime:install-progress',
+  runtimeRemove: 'runtime:remove',
   downloadedModels: 'models:downloaded',
   downloadModel: 'models:download',
   modelDownloadProgress: 'models:download-progress',
@@ -52,35 +54,60 @@ export interface SystemStatus {
   status: string
 }
 
-export type PrerequisiteCheckId = 'python' | 'ffmpeg' | 'cuda' | 'whisperx' | 'torch'
+export type RuntimeAccelerator = 'cpu' | 'cuda'
+export type RuntimeArchiveFormat = 'zip'
 
-export type PrerequisiteCheckStatus = 'ok' | 'missing' | 'unsupported' | 'attention'
-
-export interface PrerequisiteCheck {
-  id: PrerequisiteCheckId
-  installed: string | null
-  status: PrerequisiteCheckStatus
-  detail?: string
+export interface RuntimeArtifact {
+  accelerator: RuntimeAccelerator
+  arch: 'x64' | 'arm64'
+  format: RuntimeArchiveFormat
+  id: string
+  minimumNvidiaDriver?: string
+  platform: 'win32' | 'darwin' | 'linux'
+  sha256: string
+  sizeBytes: number
+  url: string
+  version: string
 }
 
-export type PrerequisiteInstallAction = 'installed' | 'opened'
-
-export interface PrerequisiteInstallResult {
-  action: PrerequisiteInstallAction
-  command?: string
-  id: PrerequisiteCheckId
-  ok: boolean
-  stderr?: string
-  stdout?: string
+export interface RuntimeManifest {
+  artifacts: RuntimeArtifact[]
+  runtimeVersion: string
+  schemaVersion: 1
 }
 
-export interface PrerequisiteInstallProgress {
-  id: PrerequisiteCheckId
-  line: string
+export type RuntimeStatusState = 'missing' | 'ready' | 'invalid' | 'installing'
+
+export interface RuntimeStatus {
+  active: RuntimeArtifact | null
+  available: RuntimeArtifact[]
+  message?: string
+  recommended: RuntimeArtifact | null
+  state: RuntimeStatusState
+}
+
+export type RuntimeInstallPhase =
+  | 'preparing'
+  | 'downloading'
+  | 'verifying'
+  | 'extracting'
+  | 'checking'
+  | 'ready'
+  | 'error'
+
+export interface RuntimeInstallProgress {
   downloadedBytes?: number
-  totalBytes?: number
-  speedBytesPerSec?: number
   etaSeconds?: number
+  message: string
+  phase: RuntimeInstallPhase
+  speedBytesPerSec?: number
+  totalBytes?: number
+}
+
+export interface RuntimeActionResult {
+  ok: boolean
+  status: RuntimeStatus
+  stderr?: string
 }
 
 export interface DownloadedWhisperModel {
@@ -207,16 +234,16 @@ export interface WhisperProgressUpdate {
   state: WhisperProgressState
 }
 
-/** Application metadata, system status, prerequisites, and file-path utilities. */
+/** Application metadata, system status, Runtime management, and file-path utilities. */
 export interface AppApi {
   getAppInfo: () => Promise<AppInfo>
   getPlatform: () => Promise<DesktopPlatform>
   getSystemStatus: () => Promise<SystemStatus>
-  getPrerequisites: () => Promise<PrerequisiteCheck[]>
-  installPrerequisite: (id: PrerequisiteCheckId) => Promise<PrerequisiteInstallResult>
-  onPrerequisiteInstallProgress: (
-    callback: (progress: PrerequisiteInstallProgress) => void
-  ) => () => void
+  getRuntimeStatus: () => Promise<RuntimeStatus>
+  getRuntimeManifest: () => Promise<RuntimeManifest>
+  installRuntime: (artifactId?: string) => Promise<RuntimeActionResult>
+  removeRuntime: () => Promise<RuntimeActionResult>
+  onRuntimeInstallProgress: (callback: (progress: RuntimeInstallProgress) => void) => () => void
   getFilePath: (file: unknown) => string
 }
 
