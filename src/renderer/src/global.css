@@ -155,6 +155,62 @@
   }
 }
 
+@property --runtime-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes runtime-border-spin {
+  to {
+    --runtime-angle: 360deg;
+  }
+}
+
+.runtime-card-border {
+  position: relative;
+  border-radius: 1rem;
+  padding: 2px;
+  /* faint base border for the whole perimeter, snake segment travels over it */
+  background: conic-gradient(
+    from var(--runtime-angle),
+    color-mix(in oklab, var(--border) 55%, transparent) 0%,
+    color-mix(in oklab, var(--border) 55%, transparent) 74%,
+    /* snake tail fades in */ rgba(124, 77, 255, 0.45) 78%,
+    /* snake body — colorful segment */ #7c4dff 81%,
+    #2a8ff4 85%,
+    #00e5ff 89%,
+    #2dd2b7 92%,
+    #69ff47 94%,
+    #ffea00 96%,
+    /* snake head fades out sharply */ rgba(255, 234, 0, 0.3) 98%,
+    color-mix(in oklab, var(--border) 55%, transparent) 100%
+  );
+  animation: runtime-border-spin 5s linear infinite;
+}
+
+.runtime-card-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(1.125rem + 12px);
+  /* glow only follows the snake segment */
+  background: conic-gradient(
+    from var(--runtime-angle),
+    transparent 0%,
+    transparent 74%,
+    rgba(124, 77, 255, 0.35) 79%,
+    rgba(42, 143, 244, 0.55) 84%,
+    rgba(0, 229, 255, 0.65) 89%,
+    rgba(105, 255, 71, 0.45) 94%,
+    transparent 100%
+  );
+  filter: blur(18px);
+  opacity: 0.7;
+  animation: runtime-border-spin 5s linear infinite;
+  z-index: -1;
+}
+
 @layer components {
   .glass-panel {
     @apply border border-border/60 bg-card/70 shadow-sm backdrop-blur;
