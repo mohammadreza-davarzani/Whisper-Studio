@@ -30,7 +30,8 @@ const browserDesktopApi: DesktopApi = {
     version: '0.1.0',
     electron: 'browser',
     chrome: 'browser',
-    node: 'browser'
+    node: 'browser',
+    userDataPath: ''
   }),
   getPlatform: async () => detectBrowserPlatform(),
   getSystemStatus: async (): Promise<SystemStatus> => ({
@@ -65,6 +66,11 @@ const browserDesktopApi: DesktopApi = {
   removeRuntime: async (): Promise<RuntimeActionResult> => ({
     ok: true,
     status: { active: null, available: [], recommended: null, state: 'missing' }
+  }),
+  activateManualRuntime: async (): Promise<RuntimeActionResult> => ({
+    ok: false,
+    status: { active: null, available: [], recommended: null, state: 'missing' },
+    stderr: 'Manual activation is available in the Electron desktop app.'
   }),
   onRuntimeInstallProgress: () => () => undefined,
   getDownloadedModels: async (): Promise<DownloadedWhisperModelsResult> => ({

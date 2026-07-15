@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { CheckCircle2, Copy, ExternalLink } from 'lucide-react'
+import { useState } from 'react'
+import { AlertCircle, CheckCircle2, Copy, ExternalLink, Loader2 } from 'lucide-react'
 import type { RuntimeArtifact, RuntimeStatus } from '@shared/ipc'
 import { captions } from '@/lib/strings'
 
@@ -7,15 +7,10 @@ export function artifactLabel(artifact: RuntimeArtifact): string {
   return `${artifact.platform} ${artifact.arch} · ${artifact.accelerator.toUpperCase()}`
 }
 
-function runtimesFolder(appName: string, platform: string): string {
-  switch (platform) {
-    case 'darwin':
-      return `~/Library/Application Support/${appName}/runtimes`
-    case 'linux':
-      return `~/.config/${appName}/runtimes`
-    default:
-      return `%APPDATA%\\${appName}\\runtimes`
-  }
+function joinPath(...parts: string[]): string {
+  // simple cross-platform join for display only
+  const sep = parts[0]?.includes('\\') ? '\\' : '/'
+  return parts.join(sep)
 }
 
 function StepBadge({ n }: { n: number }) {
@@ -26,18 +21,24 @@ function StepBadge({ n }: { n: number }) {
   )
 }
 
-export function ManualInstallGuide({ status }: { status: RuntimeStatus }) {
+export function ManualInstallGuide({
+  status,
+  userDataPath,
+  activating,
+  activateError,
+  onActivate
+}: {
+  status: RuntimeStatus
+  userDataPath: string
+  activating: boolean
+  activateError: string
+  onActivate: () => void
+}) {
   const [copiedPath, setCopiedPath] = useState(false)
   const [copiedFolder, setCopiedFolder] = useState(false)
-  const [appName, setAppName] = useState('whisper-studio')
 
-  useEffect(() => {
-    void window.desktop?.getAppInfo().then((info) => setAppName(info.name))
-  }, [])
-
-  const platform = status.recommended?.platform ?? status.available[0]?.platform ?? 'win32'
   const artifact = status.recommended ?? status.available[0] ?? null
-  const folder = runtimesFolder(appName, platform)
+  const folder = userDataPath ? joinPath(userDataPath, 'runtimes') : '…'
 
   const copy = (text: string, setCopied: (v: boolean) => void): void => {
     void navigator.clipboard.writeText(text).then(() => {
@@ -46,8 +47,15 @@ export function ManualInstallGuide({ status }: { status: RuntimeStatus }) {
     })
   }
 
-  const { steps, copyPath, copied, noArtifact, folderHint, expectedFolder } =
-    captions.runtimeSetup.manualInstall
+  const {
+    steps,
+    copyPath,
+    noArtifact,
+    folderHint,
+    expectedFolder,
+    activate,
+    activating: activatingLabel
+  } = captions.runtimeSetup.manualInstall
 
   return (
     <div className="mt-4 space-y-4 text-xs">
@@ -97,7 +105,6 @@ export function ManualInstallGuide({ status }: { status: RuntimeStatus }) {
               )}
             </button>
           </div>
-          {copiedPath && <p className="mt-1 text-[11px] text-success">{copied}</p>}
         </div>
       </div>
 
@@ -134,12 +141,35 @@ export function ManualInstallGuide({ status }: { status: RuntimeStatus }) {
         </div>
       </div>
 
-      {/* Step 4 — Retry */}
+      {/* Step 4 — Activate */}
       <div className="flex gap-3">
         <StepBadge n={4} />
         <div className="min-w-0 flex-1">
           <p className="font-medium">{steps[3].title}</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">{steps[3].detail}</p>
+          {activateError && (
+            <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-[11px] text-destructive">
+              <AlertCircle className="mt-px h-3 w-3 shrink-0" />
+              <span className="break-all leading-4">{activateError}</span>
+            </div>
+          )}
+          {artifact && (
+            <div className="mt-4 flex items-center justify-end gap-1.5">
+              <button
+                type="button"
+                disabled={activating}
+                onClick={onActivate}
+                className="mt-2 flex items-center gap-1.5 rounded-lg bg-primary/15 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/25 disabled:opacity-50"
+              >
+                {activating ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-3 w-3" />
+                )}
+                {activating ? activatingLabel : activate}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -39,6 +39,13 @@ export default function RuntimeSetup({
   const [installing, setInstalling] = useState(false)
   const [error, setError] = useState(initialStatus.message ?? '')
   const [showManual, setShowManual] = useState(false)
+  const [userDataPath, setUserDataPath] = useState('')
+  const [activating, setActivating] = useState(false)
+  const [activateError, setActivateError] = useState('')
+
+  useEffect(() => {
+    void desktop.getAppInfo().then((info) => setUserDataPath(info.userDataPath))
+  }, [desktop])
 
   useEffect(() => desktop.onRuntimeInstallProgress((next) => setProgress(next)), [desktop])
 
@@ -46,6 +53,25 @@ export default function RuntimeSetup({
     () => status.available.find((artifact) => artifact.id === selectedId) ?? status.recommended,
     [selectedId, status]
   )
+
+  const activate = async (): Promise<void> => {
+    const artifact = status.recommended ?? status.available[0]
+    if (!artifact) return
+    setActivating(true)
+    setActivateError('')
+    try {
+      const result = await desktop.activateManualRuntime(artifact.id)
+      setStatus(result.status)
+      if (result.ok && result.status.state === 'ready') onReady(result.status)
+      else setActivateError(result.stderr ?? captions.runtimeSetup.errors.installFailed)
+    } catch (err) {
+      setActivateError(
+        err instanceof Error ? err.message : captions.runtimeSetup.errors.installFailed
+      )
+    } finally {
+      setActivating(false)
+    }
+  }
 
   const install = async (): Promise<void> => {
     setInstalling(true)
@@ -126,7 +152,13 @@ export default function RuntimeSetup({
               </div>
 
               {showManual ? (
-                <ManualInstallGuide status={status} />
+                <ManualInstallGuide
+                  status={status}
+                  userDataPath={userDataPath}
+                  activating={activating}
+                  activateError={activateError}
+                  onActivate={() => void activate()}
+                />
               ) : (
                 <>
                   {status.available.length > 0 ? (

@@ -39,6 +39,8 @@ const appApi: AppApi = {
     ipcRenderer.invoke(IPC_CHANNELS.runtimeInstall, artifactId) as Promise<RuntimeActionResult>,
   removeRuntime: () =>
     ipcRenderer.invoke(IPC_CHANNELS.runtimeRemove) as Promise<RuntimeActionResult>,
+  activateManualRuntime: (artifactId: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.runtimeActivate, artifactId) as Promise<RuntimeActionResult>,
   onRuntimeInstallProgress: (callback) => {
     const listener = (_event: Electron.IpcRendererEvent, progress: RuntimeInstallProgress): void =>
       callback(progress)

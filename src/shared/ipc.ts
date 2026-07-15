@@ -7,6 +7,7 @@ export const IPC_CHANNELS = {
   runtimeInstall: 'runtime:install',
   runtimeInstallProgress: 'runtime:install-progress',
   runtimeRemove: 'runtime:remove',
+  runtimeActivate: 'runtime:activate',
   downloadedModels: 'models:downloaded',
   downloadModel: 'models:download',
   modelDownloadProgress: 'models:download-progress',
@@ -41,6 +42,7 @@ export interface AppInfo {
   electron: string
   chrome: string
   node: string
+  userDataPath: string
 }
 
 export interface SystemStatusMetric {
@@ -243,6 +245,7 @@ export interface AppApi {
   getRuntimeManifest: () => Promise<RuntimeManifest>
   installRuntime: (artifactId?: string) => Promise<RuntimeActionResult>
   removeRuntime: () => Promise<RuntimeActionResult>
+  activateManualRuntime: (artifactId: string) => Promise<RuntimeActionResult>
   onRuntimeInstallProgress: (callback: (progress: RuntimeInstallProgress) => void) => () => void
   getFilePath: (file: unknown) => string
 }

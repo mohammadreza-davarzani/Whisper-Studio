@@ -168,7 +168,9 @@ export const captions = {
       copied: 'Copied!',
       noArtifact: 'Select the ZIP for your platform and GPU.',
       folderHint: 'Extract so the ZIP root folder sits directly inside the runtimes folder.',
-      expectedFolder: 'Expected folder name'
+      expectedFolder: 'Expected folder name',
+      activate: 'Activate Runtime',
+      activating: 'Verifying files…'
     }
   },
   models: {

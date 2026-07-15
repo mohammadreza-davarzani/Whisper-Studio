@@ -220,6 +220,40 @@ export async function installRuntime(
   }
 }
 
+export async function activateManualRuntime(artifactId: string): Promise<RuntimeActionResult> {
+  const manifest = await loadRuntimeManifest()
+  const { available } = await getSelection(manifest)
+  const artifact = available.find((a) => a.id === artifactId) ?? null
+
+  if (!artifact) {
+    return {
+      ok: false,
+      status: await getRuntimeStatus(manifest),
+      stderr: `Artifact "${artifactId}" was not found in the manifest. Check your internet connection.`
+    }
+  }
+
+  const root = getRuntimeInstallPath(artifact)
+  try {
+    await checkRuntimeFiles(root)
+  } catch {
+    return {
+      ok: false,
+      status: await getRuntimeStatus(manifest),
+      stderr: `Runtime files not found at:\n${root}\n\nMake sure the folder contains python\\python.exe and ffmpeg\\ffmpeg.exe.`
+    }
+  }
+
+  await mkdir(getRuntimesPath(), { recursive: true })
+  await writeFile(
+    getActiveRuntimeRecordPath(),
+    JSON.stringify({ artifact, installedAt: Date.now() } satisfies ActiveRuntimeRecord, null, 2),
+    'utf8'
+  )
+
+  return { ok: true, status: await getRuntimeStatus(manifest) }
+}
+
 export async function removeRuntime(): Promise<RuntimeActionResult> {
   const record = await readActiveRecord()
   if (record) await rm(getRuntimeInstallPath(record.artifact), { recursive: true, force: true })

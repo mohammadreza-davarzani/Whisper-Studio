@@ -7,7 +7,7 @@ import type {
 } from '../../../shared/ipc'
 import { IPC_CHANNELS } from '../../../shared/ipc'
 import { loadRuntimeManifest } from '../../runtime/manifest'
-import { getRuntimeStatus, installRuntime, removeRuntime } from '../../runtime/manager'
+import { getRuntimeStatus, installRuntime, removeRuntime, activateManualRuntime } from '../../runtime/manager'
 
 export function registerRuntimeHandlers(): void {
   ipcMain.handle(
@@ -23,4 +23,9 @@ export function registerRuntimeHandlers(): void {
       )
   )
   ipcMain.handle(IPC_CHANNELS.runtimeRemove, (): Promise<RuntimeActionResult> => removeRuntime())
+  ipcMain.handle(
+    IPC_CHANNELS.runtimeActivate,
+    (_event: IpcMainInvokeEvent, artifactId: string): Promise<RuntimeActionResult> =>
+      activateManualRuntime(artifactId)
+  )
 }
