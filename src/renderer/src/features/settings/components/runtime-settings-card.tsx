@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { SettingsCard } from '@/features/settings/components/settings-card'
 import { SettingRow } from '@/features/settings/components/setting-row'
 import { formatBytes } from '@/lib/utils'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 export function RuntimeSettingsCard({ desktop }: { desktop: AppApi }): JSX.Element {
   const [status, setStatus] = useState<RuntimeStatus | null>(null)
@@ -89,17 +90,18 @@ export function RuntimeSettingsCard({ desktop }: { desktop: AppApi }): JSX.Eleme
           last
         >
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              title="Open runtime folder"
-              onClick={() => void desktop.openRuntimeFolder()}
-            >
-              <FolderOpen className="h-3.5 w-3.5" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button variant="ghost" size="sm" onClick={() => void desktop.openRuntimeFolder()}>
+                  <FolderOpen className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Open runtime folder</TooltipContent>
+            </Tooltip>
+
             {active && (
               <Button
-                variant="outline"
+                variant="destructive"
                 size="sm"
                 disabled={busy}
                 onClick={() => setConfirmOpen(true)}
