@@ -1,14 +1,11 @@
 import { useEffect, useState } from 'react'
 import {
-  RefreshCw,
   FolderOpen,
   Trash2,
   Github,
   Bug,
   Mail,
   Send,
-  CheckCircle2,
-  ArrowUpCircle,
   Coffee,
   Loader2,
   Settings,
@@ -19,7 +16,7 @@ import {
   KeyRound
 } from 'lucide-react'
 import { WHISPER_LANGUAGES } from '@shared/constants'
-import type { AppInfo, DesktopApi, UpdateCheckResult } from '@shared/ipc'
+import type { AppInfo, DesktopApi } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
 import { BrandedPage } from '@/components/branded-page'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -35,7 +32,7 @@ import { AboutLinkCard } from './components/about-link-card'
 import { DeleteAllConfirmModal } from './components/delete-all-confirm-modal'
 import { SettingsCard } from './components/settings-card'
 import { SettingRow } from './components/setting-row'
-import { useSettings } from './use-settings'
+import { useSettings } from './hooks/use-settings'
 import { RuntimeSettingsCard } from '@/features/settings/components/runtime-settings-card'
 
 const EXPORT_FORMATS = ['srt', 'vtt', 'txt', 'tsv'] as const
@@ -47,25 +44,12 @@ interface SettingsPageProps {
 export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
   const { settings, loading, updateSettings } = useSettings(desktop)
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
-  const [updateState, setUpdateState] = useState<
-    'idle' | 'checking' | { result: UpdateCheckResult } | 'error'
-  >('idle')
   const [deletingAll, setDeletingAll] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
 
   useEffect(() => {
     void desktop.getAppInfo().then(setAppInfo)
   }, [desktop])
-
-  async function handleCheckUpdate(): Promise<void> {
-    setUpdateState('checking')
-    try {
-      const result = await desktop.checkForUpdates()
-      setUpdateState({ result })
-    } catch {
-      setUpdateState('error')
-    }
-  }
 
   async function handleBrowseOutputDir(): Promise<void> {
     const dir = await desktop.selectDirectory()
@@ -100,9 +84,8 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
   }
 
   return (
-    <BrandedPage version={appInfo?.version}>
+    <div>
       <div className="mx-auto max-w-3xl space-y-4 px-6 py-8">
-        {/* ── Hero: App info + Check for Updates ───────────────────────── */}
         <div className="relative overflow-hidden rounded-3xl border border-border/40 bg-gradient-to-br from-primary/10 via-card to-card p-8">
           <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-32 -left-20 w-64 h-64 rounded-full bg-chart-2/5 blur-3xl pointer-events-none" />
@@ -127,53 +110,6 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
                   <span className="inline-block h-4 w-16 animate-pulse rounded bg-muted" />
                 )}
               </p>
-            </div>
-
-            {/* Check for Updates */}
-            <div className="flex flex-col items-start gap-3 sm:items-end">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={updateState === 'checking'}
-                onClick={() => void handleCheckUpdate()}
-                className="bg-background/60 backdrop-blur-sm"
-              >
-                {updateState === 'checking' ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-3.5 w-3.5" />
-                )}
-                {updateState === 'checking' ? 'Checking…' : 'Check for Updates'}
-              </Button>
-
-              {updateState !== 'idle' && updateState !== 'checking' && updateState !== 'error' && (
-                <>
-                  {updateState.result.hasUpdate ? (
-                    <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-sm">
-                      <ArrowUpCircle className="h-4 w-4 shrink-0 text-primary" />
-                      <span className="font-medium text-primary">
-                        {updateState.result.releaseName} available
-                      </span>
-                      <button
-                        type="button"
-                        className="ml-1 text-xs text-primary underline underline-offset-2 hover:opacity-80"
-                        onClick={() => void desktop.openExternal(updateState.result.releaseUrl)}
-                      >
-                        Download
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-success" />
-                      <span>v{updateState.result.currentVersion} — you&apos;re up to date</span>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {updateState === 'error' && (
-                <p className="text-xs text-destructive">Could not reach GitHub.</p>
-              )}
             </div>
           </div>
         </div>
@@ -265,7 +201,7 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
             description="Permanently removes all saved transcription records and output files from disk."
             last
           >
-            <Button variant="outline" size="sm" onClick={() => setDeleteModalOpen(true)}>
+            <Button variant="destructive" size="sm" onClick={() => setDeleteModalOpen(true)}>
               <Trash2 className="h-3.5 w-3.5" />
               Delete All
             </Button>
@@ -317,6 +253,6 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
         onCancel={() => setDeleteModalOpen(false)}
         onConfirm={() => void handleDeleteAll()}
       />
-    </BrandedPage>
+    </div>
   )
 }

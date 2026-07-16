@@ -65,7 +65,8 @@ export function App(): JSX.Element {
     platform,
     runtimeStatus,
     setRuntimeStatus,
-    systemStatus
+    systemStatus,
+    updateResult
   } = useDesktopShell()
   const { activeRoute, navigateTo } = useAppRoute()
   const showSetup = isShellReady && runtimeStatus !== null && runtimeStatus.state !== 'ready'
@@ -117,7 +118,13 @@ export function App(): JSX.Element {
         </main>
       </div>
 
-      {!showSetup && <SystemStatusBar appVersion={appInfo?.version} status={systemStatus} />}
+      {!showSetup && (
+        <SystemStatusBar
+          appVersion={appInfo?.version}
+          status={systemStatus}
+          updateResult={updateResult}
+        />
+      )}
     </div>
   )
 }
