@@ -240,12 +240,12 @@
       linear-gradient(245deg, color-mix(in oklab, var(--chart-2) 4%, transparent), transparent 36%),
       repeating-linear-gradient(
         90deg,
-        color-mix(in oklab, var(--foreground) 2%, transparent) 0 1px,
+        color-mix(in oklab, var(--foreground) 4%, transparent) 0 1px,
         transparent 1px 72px
       ),
       repeating-linear-gradient(
         0deg,
-        color-mix(in oklab, var(--foreground) 2%, transparent) 0 1px,
+        color-mix(in oklab, var(--foreground) 4%, transparent) 0 1px,
         transparent 1px 72px
       ),
       var(--background);
