@@ -8,6 +8,7 @@ export const IPC_CHANNELS = {
   runtimeInstallProgress: 'runtime:install-progress',
   runtimeRemove: 'runtime:remove',
   runtimeActivate: 'runtime:activate',
+  runtimeOpenFolder: 'runtime:open-folder',
   downloadedModels: 'models:downloaded',
   downloadModel: 'models:download',
   modelDownloadProgress: 'models:download-progress',
@@ -246,6 +247,7 @@ export interface AppApi {
   installRuntime: (artifactId?: string) => Promise<RuntimeActionResult>
   removeRuntime: () => Promise<RuntimeActionResult>
   activateManualRuntime: (artifactId: string) => Promise<RuntimeActionResult>
+  openRuntimeFolder: () => Promise<void>
   onRuntimeInstallProgress: (callback: (progress: RuntimeInstallProgress) => void) => () => void
   getFilePath: (file: unknown) => string
 }

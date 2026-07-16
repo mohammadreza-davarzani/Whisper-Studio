@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Cpu, Loader2, Trash2 } from 'lucide-react'
+import { Cpu, FolderOpen, Loader2, Trash2 } from 'lucide-react'
 import type { AppApi, RuntimeInstallProgress, RuntimeStatus } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
 import { SettingsCard } from '@/features/settings/components/settings-card'
@@ -89,6 +89,14 @@ export function RuntimeSettingsCard({ desktop }: { desktop: AppApi }): JSX.Eleme
           last
         >
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Open runtime folder"
+              onClick={() => void desktop.openRuntimeFolder()}
+            >
+              <FolderOpen className="h-3.5 w-3.5" />
+            </Button>
             {active && (
               <Button
                 variant="outline"

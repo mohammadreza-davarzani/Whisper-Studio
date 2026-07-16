@@ -72,6 +72,7 @@ const browserDesktopApi: DesktopApi = {
     status: { active: null, available: [], recommended: null, state: 'missing' },
     stderr: 'Manual activation is available in the Electron desktop app.'
   }),
+  openRuntimeFolder: async () => undefined,
   onRuntimeInstallProgress: () => () => undefined,
   getDownloadedModels: async (): Promise<DownloadedWhisperModelsResult> => ({
     models: [],
