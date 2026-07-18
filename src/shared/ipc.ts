@@ -101,10 +101,12 @@ export type RuntimeInstallPhase =
 export interface RuntimeInstallProgress {
   downloadedBytes?: number
   etaSeconds?: number
+  extractedFiles?: number
   message: string
   phase: RuntimeInstallPhase
   speedBytesPerSec?: number
   totalBytes?: number
+  totalFiles?: number
 }
 
 export interface RuntimeActionResult {

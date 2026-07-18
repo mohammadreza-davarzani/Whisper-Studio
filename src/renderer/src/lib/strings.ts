@@ -130,7 +130,8 @@ export const captions = {
       error: 'Installation failed'
     },
     progress: {
-      left: 'left'
+      left: 'left',
+      files: 'files'
     },
     actions: {
       install: 'Download and install Runtime',

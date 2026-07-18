@@ -94,6 +94,11 @@ export default function RuntimeSetup({
       ? Math.min(100, Math.round((progress.downloadedBytes / progress.totalBytes) * 100))
       : 0
 
+  const extractPct =
+    progress?.totalFiles && progress.extractedFiles
+      ? Math.min(100, Math.round((progress.extractedFiles / progress.totalFiles) * 100))
+      : 0
+
   return (
     <BrandedPage
       className="h-full"
@@ -209,28 +214,45 @@ export default function RuntimeSetup({
                         {progress.phase === 'downloading' && (
                           <span className="font-mono text-muted-foreground">{pct}%</span>
                         )}
+                        {progress.phase === 'extracting' && (progress.totalFiles ?? 0) > 0 && (
+                          <span className="font-mono text-muted-foreground">{extractPct}%</span>
+                        )}
                       </div>
                       <div className="h-1 overflow-hidden rounded-full bg-muted">
                         <div
                           className={`h-full rounded-full bg-gradient-to-r from-primary via-chart-2 to-chart-3 ${
-                            progress.phase === 'downloading'
+                            progress.phase === 'downloading' || progress.phase === 'extracting'
                               ? 'transition-[width] duration-300 ease-out'
                               : 'animate-[splash-progress_1.3s_ease-in-out_infinite]'
                           }`}
                           style={
-                            progress.phase === 'downloading' ? { width: `${pct}%` } : undefined
+                            progress.phase === 'downloading'
+                              ? { width: `${pct}%` }
+                              : progress.phase === 'extracting'
+                                ? { width: `${extractPct}%` }
+                                : undefined
                           }
                         />
                       </div>
                       <div className="flex justify-between gap-3 text-[11px] text-muted-foreground">
                         <span>{progress.message}</span>
-                        {(progress.speedBytesPerSec ?? 0) > 0 && (
+                        {progress.phase === 'extracting' &&
+                        (progress.extractedFiles ?? 0) > 0 &&
+                        (progress.totalFiles ?? 0) > 0 ? (
                           <span className="shrink-0 font-mono">
-                            {formatBytes(progress.speedBytesPerSec!)}/s
-                            {(progress.etaSeconds ?? 0) > 0
-                              ? ` · ${secondsToDisplay(progress.etaSeconds!)} ${captions.runtimeSetup.progress.left}`
-                              : ''}
+                            {progress.extractedFiles!.toLocaleString()} /{' '}
+                            {progress.totalFiles!.toLocaleString()}{' '}
+                            {captions.runtimeSetup.progress.files}
                           </span>
+                        ) : (
+                          (progress.speedBytesPerSec ?? 0) > 0 && (
+                            <span className="shrink-0 font-mono">
+                              {formatBytes(progress.speedBytesPerSec!)}/s
+                              {(progress.etaSeconds ?? 0) > 0
+                                ? ` · ${secondsToDisplay(progress.etaSeconds!)} ${captions.runtimeSetup.progress.left}`
+                                : ''}
+                            </span>
+                          )
                         )}
                       </div>
                     </div>
