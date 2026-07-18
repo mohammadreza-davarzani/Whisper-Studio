@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "runtimeVersion": "1.0.0",
+  "artifacts": [
+    {
+      "accelerator": "cpu",
+      "arch": "x64",
+      "format": "zip",
+      "id": "whisper-runtime-win32-x64-cpu-1.0.0",
+      "platform": "win32",
+      "sha256": "b19c9c2e555a402fd4ec58ae2d4f855aa4ffe47cba745c4a4c0fafc2381c5c27",
+      "sizeBytes": 1085513628,
+      "url": "https://huggingface.co/buckets/WhisperStudio/whisper-runtime/resolve/whisper-runtime-win32-x64-cpu-1.0.0.zip",
+      "version": "1.0.0"
+    },
+    {
+      "accelerator": "cuda",
+      "arch": "x64",
+      "format": "zip",
+      "id": "whisper-runtime-win32-x64-cuda-1.0.0",
+      "minimumNvidiaDriver": "570.65",
+      "platform": "win32",
+      "sha256": "eb2af97f6b8c391a8a04dc03e7b4e200c0bac7d7e398dd790b7481a06d79c5b4",
+      "sizeBytes": 3950958687,
+      "url": "https://huggingface.co/buckets/WhisperStudio/whisper-runtime/resolve/whisper-runtime-win32-x64-cuda-1.0.0.zip",
+      "version": "1.0.0"
+    },
+    {
+      "accelerator": "cpu",
+      "arch": "arm64",
+      "format": "zip",
+      "id": "whisper-runtime-darwin-arm64-cpu-1.0.0",
+      "platform": "darwin",
+      "sha256": "183e7db37d163d5ee0aa0ad0aa95c12732d2df43ff3ef891725ea093ab02676f",
+      "sizeBytes": 28501090,
+      "url": "https://huggingface.co/buckets/WhisperStudio/whisper-runtime/resolve/whisper-runtime-darwin-arm64-cpu-1.0.0.zip",
+      "version": "1.0.0"
+    }
+  ]
+}

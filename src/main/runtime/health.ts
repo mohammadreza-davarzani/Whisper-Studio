@@ -11,7 +11,7 @@ function run(command: string, args: readonly string[], timeout = 30_000): Promis
         const detail = stderr.trim() || stdout.trim()
         reject(new Error(detail || error.message))
       } else {
-        resolve(`${stdout}${stderr}`.trim())
+        resolve(stdout.trim())
       }
     })
   })
@@ -45,7 +45,8 @@ export async function checkRuntime(root: string, artifact: RuntimeArtifact): Pro
   const raw = await run(python, ['-c', probe])
   let result: { ok: boolean; torch: string }
   try {
-    result = JSON.parse(raw) as { ok: boolean; torch: string }
+    const jsonLine = raw.split(/\r?\n/).find((l) => l.trimStart().startsWith('{')) ?? raw
+    result = JSON.parse(jsonLine) as { ok: boolean; torch: string }
   } catch {
     throw new Error(`Runtime check returned unexpected output: ${raw}`)
   }

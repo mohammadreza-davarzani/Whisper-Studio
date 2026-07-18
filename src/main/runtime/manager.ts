@@ -22,7 +22,7 @@ import {
 } from '../paths'
 import { checkRuntime, checkRuntimeFiles } from './health'
 import { loadRuntimeManifest } from './manifest'
-import { getRuntimeInstallPath } from './paths'
+import { getRuntimeInstallPath, getRuntimePythonPath, getRuntimeFfmpegPath } from './paths'
 import {
   compareNumericVersions,
   getCompatibleRuntimeArtifacts,
@@ -193,8 +193,32 @@ export async function installRuntime(
 
     emit({ phase: 'verifying', message: 'Runtime download verified.' })
     await mkdir(stagingPath, { recursive: true })
-    emit({ phase: 'extracting', message: 'Extracting Runtime files. it might take a few moments.' })
-    await extract(archivePath, { dir: stagingPath })
+    emit({ phase: 'extracting', message: 'Extracting Runtime files.' })
+    let extractedFiles = 0
+    let lastEmitTime = Date.now()
+    await extract(archivePath, {
+      dir: stagingPath,
+      onEntry: (_entry, zipfile) => {
+        extractedFiles++
+        const totalFiles = zipfile.entryCount
+        const now = Date.now()
+        if (now - lastEmitTime >= 300) {
+          emit({
+            phase: 'extracting',
+            message: 'Extracting Runtime files.',
+            extractedFiles,
+            totalFiles
+          })
+          lastEmitTime = now
+        }
+      }
+    })
+    emit({
+      phase: 'extracting',
+      message: 'Extracting Runtime files.',
+      extractedFiles,
+      totalFiles: extractedFiles
+    })
 
     // ZIP is fully extracted — delete it immediately to reclaim disk space
     extractionComplete = true
@@ -250,10 +274,12 @@ export async function activateManualRuntime(artifactId: string): Promise<Runtime
   try {
     await checkRuntimeFiles(root)
   } catch {
+    const pythonHint = getRuntimePythonPath(root)
+    const ffmpegHint = getRuntimeFfmpegPath(root)
     return {
       ok: false,
       status: await getRuntimeStatus(manifest),
-      stderr: `Runtime files not found at:\n${root}\n\nMake sure the folder contains python\\python.exe and ffmpeg\\ffmpeg.exe.`
+      stderr: `Runtime files not found at:\n${root}\n\nMake sure the folder contains:\n  ${pythonHint}\n  ${ffmpegHint}`
     }
   }
 
